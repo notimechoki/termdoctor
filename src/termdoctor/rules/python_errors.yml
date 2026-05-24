@@ -1,0 +1,221 @@
+- id: syntax_error
+  error: SyntaxError
+  title: "Invalid Python syntax"
+  explanation: "Python could not understand the code structure. This usually means there is a typo or a missing symbol near the reported line."
+  causes:
+    - "Missing colon after if, for, while, def, class, try, except, or else."
+    - "Unclosed parentheses, brackets, braces, or quotes."
+    - "Invalid operator or misplaced character."
+  fixes:
+    - "Check the reported file and line: {file_path}:{line_number}."
+    - "Look at the line above the reported line too. Syntax errors are often caused by the previous line."
+    - "Check missing colons, quotes, parentheses, and brackets."
+  examples:
+    - "if user == 'admin':"
+    - "print('Hello')"
+
+- id: indentation_error
+  error: IndentationError
+  title: "Incorrect indentation"
+  explanation: "Python uses indentation to understand code blocks. This error means the indentation level is not valid."
+  causes:
+    - "A line is indented too much or too little."
+    - "Tabs and spaces are mixed in the same file."
+    - "Code inside if, for, while, def, or class is not indented correctly."
+  fixes:
+    - "Use 4 spaces per indentation level."
+    - "Do not mix tabs and spaces."
+    - "Check the block around {file_path}:{line_number}."
+
+- id: module_not_found
+  error: ModuleNotFoundError
+  title: "Python cannot find a module"
+  explanation: "Python tried to import `{module}`, but it is not available in the current environment."
+  causes:
+    - "The package is not installed."
+    - "The virtual environment is not activated."
+    - "You are using a different Python interpreter."
+    - "The import name is different from the package name."
+  fixes:
+    - "Activate your virtual environment."
+    - "Install the missing package: pip install {module}"
+    - "Check requirements.txt or pyproject.toml."
+    - "Run python -m pip show {module} to check whether the package is installed."
+
+- id: import_error
+  error: ImportError
+  title: "Import failed"
+  explanation: "Python found the module, but could not import the requested object from it."
+  causes:
+    - "The imported name does not exist in that module."
+    - "There is a circular import."
+    - "The installed package version does not contain this object."
+  fixes:
+    - "Check the spelling of `{name}`."
+    - "Open the module and verify that `{name}` is defined there."
+    - "Check for circular imports between files."
+    - "Check the installed package version."
+
+- id: name_error
+  error: NameError
+  title: "A name is used before it exists"
+  explanation: "Python found a variable, function, or class name that was not defined."
+  causes:
+    - "There is a typo in the name."
+    - "The variable is used before assignment."
+    - "The function or class was not imported."
+    - "The name exists only inside another scope."
+  fixes:
+    - "Check the spelling of `{name}`."
+    - "Make sure `{name}` is created before this line."
+    - "Check imports."
+    - "Check whether `{name}` is defined inside a function or block and unavailable here."
+
+- id: type_error
+  error: TypeError
+  title: "Wrong value type or invalid operation"
+  explanation: "Python received a value of the wrong type, or an operation was used with incompatible types."
+  causes:
+    - "A function received an argument of the wrong type."
+    - "You tried to combine incompatible values, like string + integer."
+    - "You called something that is not callable."
+    - "A required argument is missing."
+  fixes:
+    - "Read the full error message carefully. TypeError usually describes exactly what type was expected."
+    - "Print the type of the value with type(value)."
+    - "Check function arguments."
+    - "Convert values before using them, for example int(value) or str(value)."
+
+- id: value_error
+  error: ValueError
+  title: "Correct type, invalid value"
+  explanation: "Python received a value of the correct type, but the value itself is not acceptable."
+  causes:
+    - "A string cannot be converted to a number."
+    - "A function received a value outside the allowed range."
+    - "Data format is invalid."
+  fixes:
+    - "Check the value that caused the error."
+    - "Validate user input before converting it."
+    - "Add error handling with try/except if the value can be invalid."
+
+- id: attribute_error
+  error: AttributeError
+  title: "Object does not have this attribute"
+  explanation: "Python tried to access attribute `{attribute}`, but this object does not have it."
+  causes:
+    - "The object is not the type you expected."
+    - "There is a typo in the attribute or method name."
+    - "The value is None."
+  fixes:
+    - "Print the object type with type(value)."
+    - "Check the spelling of `{attribute}`."
+    - "Check whether the object is None before accessing attributes."
+    - "Use dir(value) to inspect available attributes."
+
+- id: key_error
+  error: KeyError
+  title: "Dictionary key does not exist"
+  explanation: "Python tried to read key `{key}` from a dictionary, but that key does not exist."
+  causes:
+    - "The key name is misspelled."
+    - "The dictionary has a different structure than expected."
+    - "The key is optional and may be missing."
+  fixes:
+    - "Check the dictionary content before accessing `{key}`."
+    - "Use dict.get('{key}') if the key may be optional."
+    - "Check API response or JSON structure."
+    - "Print dictionary keys with data.keys()."
+
+- id: index_error
+  error: IndexError
+  title: "List index is out of range"
+  explanation: "Python tried to access an item by index, but the list, tuple, or string does not have an item at that position."
+  causes:
+    - "The list is empty."
+    - "The index is too large."
+    - "The loop goes beyond the collection length."
+  fixes:
+    - "Check len(value) before accessing by index."
+    - "Remember that Python indexes start from 0."
+    - "Use a for item in items loop when possible."
+
+- id: file_not_found
+  error: FileNotFoundError
+  title: "File or directory was not found"
+  explanation: "Python tried to open `{path}`, but this file or directory does not exist."
+  causes:
+    - "The path is incorrect."
+    - "The file is in another directory."
+    - "The current working directory is different from what you expect."
+  fixes:
+    - "Check the path: {path}."
+    - "Print the current directory with import os; print(os.getcwd())."
+    - "Use an absolute path or build paths with pathlib.Path."
+    - "Make sure the file exists before opening it."
+
+- id: permission_error
+  error: PermissionError
+  title: "Permission denied"
+  explanation: "Python tried to access a file, directory, or resource without enough permissions."
+  causes:
+    - "The file is protected."
+    - "The current user does not have permission."
+    - "The file is already used by another process."
+  fixes:
+    - "Check file permissions."
+    - "Try another output directory."
+    - "Do not run random scripts with sudo unless you fully trust them."
+
+- id: zero_division_error
+  error: ZeroDivisionError
+  title: "Division by zero"
+  explanation: "Python cannot divide a number by zero."
+  causes:
+    - "A divisor variable is 0."
+    - "User input produced zero."
+    - "A calculation returned zero unexpectedly."
+  fixes:
+    - "Check the divisor before division."
+    - "Add a condition: if divisor != 0."
+    - "Validate user input."
+
+- id: recursion_error
+  error: RecursionError
+  title: "Maximum recursion depth exceeded"
+  explanation: "A recursive function called itself too many times and did not stop in time."
+  causes:
+    - "The recursive function has no correct base case."
+    - "The base case is never reached."
+    - "The input is too large for recursion."
+  fixes:
+    - "Check the base case."
+    - "Print arguments on each recursive call to see why it does not stop."
+    - "Consider rewriting the logic with a loop."
+
+- id: unicode_decode_error
+  error: UnicodeDecodeError
+  title: "Text decoding failed"
+  explanation: "Python tried to read bytes as text, but the selected encoding could not decode them."
+  causes:
+    - "The file is not UTF-8."
+    - "The file contains invalid characters for the selected encoding."
+    - "You opened a binary file as text."
+  fixes:
+    - "Try specifying encoding='utf-8'."
+    - "If the file is not UTF-8, use the correct encoding."
+    - "Open binary files with mode='rb'."
+
+- id: json_decode_error
+  error: JSONDecodeError
+  title: "Invalid JSON"
+  explanation: "Python tried to parse JSON, but the text is not valid JSON."
+  causes:
+    - "The JSON string is empty."
+    - "The JSON has trailing commas."
+    - "Quotes are missing around keys or string values."
+    - "The response is HTML or plain text, not JSON."
+  fixes:
+    - "Print the raw JSON text before parsing."
+    - "Validate the JSON in a JSON formatter."
+    - "Check whether the API returned an error page instead of JSON."
