@@ -1,7 +1,7 @@
 <p align="center">
   <!-- Place your banner image here -->
   <!-- Example: assets/termdoctor-banner.png -->
-  <img src="assets/termdoctor-banner.png" alt="TermDoctor banner" width="100%">
+  <img src="assets/banner.png" alt="TermDoctor banner" width="100%">
 </p>
 
 <h1 align="center">TermDoctor</h1>
