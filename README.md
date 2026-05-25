@@ -22,7 +22,6 @@
     <img src="https://img.shields.io/badge/PyYAML-Rules-FFCA28?style=for-the-badge" alt="PyYAML">
   </a>
   <img src="https://img.shields.io/badge/Version-0.1.1-blue?style=for-the-badge" alt="Version 0.1.1">
-  <img src="https://img.shields.io/badge/Status-Alpha-orange?style=for-the-badge" alt="Alpha">
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License">
 </p>
 
@@ -32,9 +31,9 @@
 
 **TermDoctor** is a command-line tool that helps developers understand Python terminal errors.
 
-Instead of only showing a raw traceback, TermDoctor detects the error type, explains what happened in simple English, and suggests practical next steps.
+Instead of showing only a raw traceback, TermDoctor detects the error type, explains what happened in simple English, and suggests practical next steps.
 
-It is especially useful for:
+TermDoctor is useful for:
 
 - beginners learning Python;
 - students who do not understand terminal errors yet;
@@ -50,73 +49,40 @@ It is especially useful for:
 0.1.1
 ```
 
-This is the current stability patch release of TermDoctor.
+TermDoctor is currently focused on Python errors only.
 
-Version `0.1.1` improves command parsing, traceback parsing, path handling, history output, examples, tests, and terminal formatting.
-
-TermDoctor is still intentionally simple:
-
-- Python errors only;
-- rule-based diagnosis;
-- no AI;
-- no external API calls;
-- local command-line usage only.
+It works locally, does not use AI, does not send data to external services, and uses rule-based diagnosis.
 
 ---
 
-## Main idea
+## What TermDoctor currently supports
 
-You run your Python command through TermDoctor:
+### Language support
 
-```bash
-termdoctor run "python main.py"
-```
+| Language | Support status |
+|---|---|
+| Python | Supported |
+| JavaScript / TypeScript | Not supported |
+| Go | Not supported |
+| Rust | Not supported |
+| Java | Not supported |
+| Bash / Shell | Not supported |
 
-You can also use the safer argument mode, which is recommended for paths with spaces:
+### Python ecosystem support
 
-```bash
-termdoctor run -- python main.py
-```
+TermDoctor can explain standard Python tracebacks produced by:
 
-If the command fails with a Python error, TermDoctor reads the traceback and shows a clearer explanation:
+| Source | Support status |
+|---|---|
+| Python scripts | Supported |
+| Python modules | Supported |
+| Django commands | Supported if the output contains a normal Python traceback |
+| FastAPI / Uvicorn commands | Supported if the command exits and prints a Python traceback |
+| pytest output | Basic traceback parsing only |
+| Docker logs | Not supported |
+| live server logs | Not supported |
 
-```text
-Python error detected: ModuleNotFoundError
-
-What happened:
-Python tried to import `requests`, but it is not available in the current environment.
-
-Most likely causes:
-1. The package is not installed.
-2. The virtual environment is not activated.
-3. You are using a different Python interpreter.
-
-What to try:
-1. Activate your virtual environment.
-2. Install the missing package: pip install requests
-3. Check requirements.txt or pyproject.toml.
-```
-
----
-
-## Features in 0.1.1
-
-- Run commands through `termdoctor`
-- Capture `stdout` and `stderr`
-- Detect common Python errors
-- Explain errors in simple English
-- Suggest practical fixes
-- Save failed command history
-- Explain the last saved error
-- Explain a traceback from a text file
-- Paste a traceback manually through stdin
-- Store rules in a readable YAML file
-
----
-
-## Supported errors in 0.1.1
-
-TermDoctor currently supports diagnosis for common Python errors:
+### Supported Python errors
 
 | Error | Description |
 |---|---|
@@ -139,6 +105,21 @@ TermDoctor currently supports diagnosis for common Python errors:
 
 ---
 
+## Features
+
+- Run commands through `termdoctor`
+- Capture `stdout` and `stderr`
+- Detect common Python errors
+- Explain errors in simple English
+- Suggest practical fixes
+- Save failed command history
+- Explain the last saved error
+- Explain a traceback from a text file
+- Paste a traceback manually through stdin
+- Store diagnosis rules in a readable YAML file
+
+---
+
 ## Tech stack
 
 | Part | Technology |
@@ -156,15 +137,15 @@ TermDoctor currently supports diagnosis for common Python errors:
 
 ## Installation
 
-### Option 1: Install directly from GitHub with pipx
+### Install directly from GitHub with pipx
 
-This is the recommended way for users.
+This is the recommended way to install TermDoctor globally.
 
 ```bash
 pipx install git+https://github.com/notimechoki/termdoctor.git
 ```
 
-Then check that the command is available:
+Check that the command is available:
 
 ```bash
 termdoctor --help
@@ -181,7 +162,7 @@ After that, restart your terminal and run the install command again.
 
 ---
 
-### Option 2: Clone and install locally
+### Install from a local clone
 
 ```bash
 git clone https://github.com/notimechoki/termdoctor.git
@@ -209,7 +190,7 @@ termdoctor --help
 
 ---
 
-### Option 3: Development installation
+### Development installation
 
 Use this if you want to work on the project and run tests.
 
@@ -282,6 +263,12 @@ termdoctor run -- python "examples/path with spaces/name_error.py"
 termdoctor run "python -m my_module"
 ```
 
+Recommended argument mode:
+
+```bash
+termdoctor run -- python -m my_module
+```
+
 ---
 
 ### Run a Django command
@@ -290,19 +277,29 @@ termdoctor run "python -m my_module"
 termdoctor run "python manage.py migrate"
 ```
 
-For version `0.1.0`, TermDoctor does not deeply understand Django yet, but it can still explain normal Python tracebacks produced by Django commands.
+Recommended argument mode:
+
+```bash
+termdoctor run -- python manage.py migrate
+```
+
+TermDoctor does not deeply analyze Django internals, but it can explain normal Python tracebacks produced by Django commands.
 
 ---
 
-### Run a FastAPI/Uvicorn command
+### Run a FastAPI / Uvicorn command
 
 ```bash
 termdoctor run "uvicorn app.main:app --reload"
 ```
 
-For version `0.1.0`, this works best when the command exits and prints a Python traceback.
+Recommended argument mode:
 
-Long-running server log analysis is planned for future versions.
+```bash
+termdoctor run -- uvicorn app.main:app --reload
+```
+
+This works best when the command exits and prints a Python traceback.
 
 ---
 
@@ -377,6 +374,7 @@ termdoctor clear
 | `termdoctor --help` | Show help |
 | `termdoctor --version` | Show current version |
 | `termdoctor run "command"` | Run a command and explain Python errors |
+| `termdoctor run -- python main.py` | Run a command in safer argument mode |
 | `termdoctor explain last` | Explain the last saved error |
 | `termdoctor explain error.txt` | Explain a traceback from a file |
 | `termdoctor paste` | Paste a traceback manually |
@@ -393,7 +391,7 @@ termdoctor clear
 Command:
 
 ```bash
-termdoctor run "python examples/module_not_found.py"
+termdoctor run -- python examples/module_not_found.py
 ```
 
 Possible output:
@@ -422,7 +420,7 @@ What to try:
 Command:
 
 ```bash
-termdoctor run "python examples/key_error.py"
+termdoctor run -- python examples/key_error.py
 ```
 
 Possible output:
@@ -451,7 +449,7 @@ What to try:
 Command:
 
 ```bash
-termdoctor run "python examples/name_error.py"
+termdoctor run -- python examples/name_error.py
 ```
 
 Possible output:
@@ -477,7 +475,7 @@ What to try:
 
 ## How it works
 
-TermDoctor `0.1.1` does not use AI.
+TermDoctor does not use AI.
 
 It works with rule-based logic:
 
@@ -519,105 +517,28 @@ termdoctor/
 ├── examples/
 │   ├── attribute_error.py
 │   ├── file_not_found.py
+│   ├── index_error.py
+│   ├── json_decode_error.py
 │   ├── key_error.py
 │   ├── module_not_found.py
 │   ├── name_error.py
+│   ├── path with spaces/
+│   │   └── name_error.py
+│   ├── recursion_error.py
 │   ├── syntax_error.py
-│   └── type_error.py
+│   ├── type_error.py
+│   ├── value_error.py
+│   └── zero_division_error.py
 ├── tests/
+│   ├── test_cli.py
+│   ├── test_history.py
 │   ├── test_matcher.py
 │   └── test_parser.py
-├── .gitignore
+├── CHANGELOG.md
 ├── LICENSE
 ├── README.md
 └── pyproject.toml
 ```
-
----
-
-## Limitations in 0.1.1
-
-TermDoctor is currently an early alpha version.
-
-It works best with:
-
-- Python files;
-- short commands;
-- commands that exit after an error;
-- standard Python tracebacks.
-
-It does not fully support yet:
-
-- live server log streaming;
-- Docker logs;
-- JavaScript errors;
-- Go errors;
-- Rust errors;
-- Bash errors;
-- database-specific diagnosis;
-- framework-specific diagnosis;
-- AI-based explanations;
-- automatic code fixing.
-
----
-
-## Future roadmap
-
-### Version 0.1.1
-
-Included in this release:
-
-- better command parsing;
-- safer argument mode with `termdoctor run -- ...`;
-- better traceback parsing;
-- support for dotted error names like `json.decoder.JSONDecodeError`;
-- better handling of paths with spaces;
-- improved history output;
-- more Python error examples;
-- more tests;
-- cleaner terminal formatting.
-
----
-
-### Version 0.2.0
-
-Planned improvements:
-
-- detect active virtual environment;
-- detect Python version;
-- detect `requirements.txt`;
-- detect `pyproject.toml`;
-- improve `ModuleNotFoundError` suggestions;
-- detect whether the missing module is already listed in dependencies;
-- add `termdoctor env`;
-- add `termdoctor doctor python`.
-
----
-
-### Version 0.3.0
-
-...
-
----
-
-## Planned language and ecosystem support
-
-TermDoctor starts with Python only, but future versions may support more languages and ecosystems.
-
-| Language / Ecosystem | Planned support |
-|---|---|
-| Python | Supported in 0.1.0 |
-| Django | Partial traceback support now, deeper support planned |
-| FastAPI | Partial traceback support now, deeper support planned |
-| pytest | Planned |
-| JavaScript / Node.js | Planned |
-| TypeScript | Planned |
-| Bash / Shell | Planned |
-| Docker / Docker Compose | Planned |
-| SQL / PostgreSQL | Planned |
-| Go | Possible future support |
-| Rust | Possible future support |
-| Java | Possible future support |
 
 ---
 
@@ -638,10 +559,11 @@ pytest
 Run example errors:
 
 ```bash
-termdoctor run "python examples/module_not_found.py"
-termdoctor run "python examples/name_error.py"
-termdoctor run "python examples/key_error.py"
-termdoctor run "python examples/type_error.py"
+termdoctor run -- python examples/module_not_found.py
+termdoctor run -- python examples/name_error.py
+termdoctor run -- python examples/key_error.py
+termdoctor run -- python examples/type_error.py
+termdoctor run -- python examples/json_decode_error.py
 ```
 
 ---
@@ -673,6 +595,12 @@ A rule looks like this:
 
 ---
 
+## Changelog
+
+See full release notes in [CHANGELOG.md](CHANGELOG.md).
+
+---
+
 ## Philosophy
 
 TermDoctor should be:
@@ -690,10 +618,6 @@ The goal is not to hide the traceback.
 The goal is to explain it.
 
 ---
-
-## Changelog
-
-See full release notes in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
