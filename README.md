@@ -596,45 +596,7 @@ Planned improvements:
 
 ### Version 0.3.0
 
-Planned improvements:
-
-- interactive diagnosis mode;
-- better pasted traceback support;
-- export diagnosis to Markdown;
-- generate shareable debug reports;
-- better explanation for nested tracebacks;
-- better support for Django and FastAPI tracebacks.
-
----
-
-### Version 0.4.0
-
-Planned improvements:
-
-- project config file `.termdoctor.yml`;
-- custom user rules;
-- custom project rules;
-- rule categories;
-- rule severity levels;
-- improved report generation;
-- optional suggestions based on project context.
-
----
-
-### Version 0.5.0 and later
-
-Possible future features:
-
-- live log reading;
-- Docker log diagnosis;
-- `pytest` error explanations;
-- package manager diagnosis;
-- database error diagnosis;
-- terminal session history;
-- optional AI mode;
-- VS Code extension;
-- browser extension for copying traceback into TermDoctor;
-- GitHub Action for explaining CI errors.
+...
 
 ---
 
