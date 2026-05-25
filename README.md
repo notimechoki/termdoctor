@@ -1,6 +1,4 @@
 <p align="center">
-  <!-- Place your banner image here -->
-  <!-- Example: assets/termdoctor-banner.png -->
   <img src="assets/banner.png" alt="TermDoctor banner" width="100%">
 </p>
 
@@ -23,7 +21,7 @@
   <a href="https://pyyaml.org/">
     <img src="https://img.shields.io/badge/PyYAML-Rules-FFCA28?style=for-the-badge" alt="PyYAML">
   </a>
-  <img src="https://img.shields.io/badge/Version-0.1.0-blue?style=for-the-badge" alt="Version 0.1.0">
+  <img src="https://img.shields.io/badge/Version-0.1.1-blue?style=for-the-badge" alt="Version 0.1.1">
   <img src="https://img.shields.io/badge/Status-Alpha-orange?style=for-the-badge" alt="Alpha">
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License">
 </p>
@@ -49,12 +47,14 @@ It is especially useful for:
 ## Current version
 
 ```text
-0.1.0
+0.1.1
 ```
 
-This is the first working release of TermDoctor.
+This is the current stability patch release of TermDoctor.
 
-Version `0.1.0` is intentionally simple:
+Version `0.1.1` improves command parsing, traceback parsing, path handling, history output, examples, tests, and terminal formatting.
+
+TermDoctor is still intentionally simple:
 
 - Python errors only;
 - rule-based diagnosis;
@@ -70,6 +70,12 @@ You run your Python command through TermDoctor:
 
 ```bash
 termdoctor run "python main.py"
+```
+
+You can also use the safer argument mode, which is recommended for paths with spaces:
+
+```bash
+termdoctor run -- python main.py
 ```
 
 If the command fails with a Python error, TermDoctor reads the traceback and shows a clearer explanation:
@@ -93,7 +99,7 @@ What to try:
 
 ---
 
-## Features in 0.1.0
+## Features in 0.1.1
 
 - Run commands through `termdoctor`
 - Capture `stdout` and `stderr`
@@ -108,7 +114,7 @@ What to try:
 
 ---
 
-## Supported errors in 0.1.0
+## Supported errors in 0.1.1
 
 TermDoctor currently supports diagnosis for common Python errors:
 
@@ -239,7 +245,7 @@ termdoctor --version
 Expected output:
 
 ```text
-TermDoctor 0.1.0
+TermDoctor 0.1.1
 ```
 
 ---
@@ -254,6 +260,18 @@ Example:
 
 ```bash
 termdoctor run "python examples/module_not_found.py"
+```
+
+Recommended argument mode:
+
+```bash
+termdoctor run -- python examples/module_not_found.py
+```
+
+Example with a path that contains spaces:
+
+```bash
+termdoctor run -- python "examples/path with spaces/name_error.py"
 ```
 
 ---
@@ -459,7 +477,7 @@ What to try:
 
 ## How it works
 
-TermDoctor `0.1.0` does not use AI.
+TermDoctor `0.1.1` does not use AI.
 
 It works with rule-based logic:
 
@@ -517,7 +535,7 @@ termdoctor/
 
 ---
 
-## Limitations in 0.1.0
+## Limitations in 0.1.1
 
 TermDoctor is currently an early alpha version.
 
@@ -547,10 +565,12 @@ It does not fully support yet:
 
 ### Version 0.1.1
 
-Planned improvements:
+Included in this release:
 
 - better command parsing;
+- safer argument mode with `termdoctor run -- ...`;
 - better traceback parsing;
+- support for dotted error names like `json.decoder.JSONDecodeError`;
 - better handling of paths with spaces;
 - improved history output;
 - more Python error examples;
@@ -708,6 +728,10 @@ The goal is not to hide the traceback.
 The goal is to explain it.
 
 ---
+
+## Changelog
+
+See full release notes in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

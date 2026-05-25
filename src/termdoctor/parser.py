@@ -4,12 +4,21 @@ from termdoctor.models import ParsedError
 
 
 ERROR_LINE_PATTERN = re.compile(
-    r"^(?P<error_type>[A-Za-z_][A-Za-z0-9_]*(?:Error|Exception|Warning)|KeyboardInterrupt|SystemExit|StopIteration|StopAsyncIteration)"
+    r"^(?P<full_error_type>"
+    r"(?:[A-Za-z_][A-Za-z0-9_]*\.)*"
+    r"(?:[A-Za-z_][A-Za-z0-9_]*(?:Error|Exception|Warning)"
+    r"|KeyboardInterrupt|SystemExit|StopIteration|StopAsyncIteration))"
     r"(?::\s*(?P<message>.*))?$"
 )
 
 FILE_LINE_PATTERN = re.compile(
     r'File "(?P<file_path>.+?)", line (?P<line_number>\d+)'
+)
+
+IGNORED_TRACEBACK_LINES = (
+    "Traceback (most recent call last):",
+    "During handling of the above exception, another exception occurred:",
+    "The above exception was the direct cause of the following exception:",
 )
 
 
@@ -30,6 +39,7 @@ def parse_python_error(text: str) -> ParsedError | None:
         line_number = int(last_file_match.group("line_number"))
 
     error_type = None
+    full_error_type = None
     message = ""
 
     lines = cleaned_text.splitlines()
@@ -37,16 +47,14 @@ def parse_python_error(text: str) -> ParsedError | None:
     for line in reversed(lines):
         stripped_line = line.strip()
 
-        if not stripped_line:
-            continue
-
-        if stripped_line.startswith("^"):
+        if should_skip_line(stripped_line):
             continue
 
         match = ERROR_LINE_PATTERN.match(stripped_line)
 
         if match:
-            error_type = match.group("error_type")
+            full_error_type = match.group("full_error_type")
+            error_type = normalize_error_type(full_error_type)
             message = match.group("message") or ""
             break
 
@@ -54,6 +62,9 @@ def parse_python_error(text: str) -> ParsedError | None:
         return None
 
     extracted = extract_details(error_type=error_type, message=message)
+
+    if full_error_type and full_error_type != error_type:
+        extracted["full_error_type"] = full_error_type
 
     return ParsedError(
         error_type=error_type,
@@ -63,6 +74,26 @@ def parse_python_error(text: str) -> ParsedError | None:
         line_number=line_number,
         extracted=extracted,
     )
+
+
+def should_skip_line(line: str) -> bool:
+    if not line:
+        return True
+
+    if line.startswith("^"):
+        return True
+
+    if set(line) == {"~"}:
+        return True
+
+    if set(line) == {"-"}:
+        return True
+
+    return line in IGNORED_TRACEBACK_LINES
+
+
+def normalize_error_type(error_type: str) -> str:
+    return error_type.split(".")[-1]
 
 
 def extract_details(error_type: str, message: str) -> dict[str, str]:
@@ -103,5 +134,11 @@ def extract_details(error_type: str, message: str) -> dict[str, str]:
 
         if attr_match:
             extracted["attribute"] = attr_match.group("attribute")
+
+    if error_type == "IndexError":
+        extracted["index_hint"] = "The index is outside the available range."
+
+    if error_type == "JSONDecodeError":
+        extracted["json_hint"] = "The input is not valid JSON."
 
     return extracted

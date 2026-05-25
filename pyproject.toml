@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "termdoctor"
-version = "0.1.0"
+version = "0.1.1"
 description = "A CLI tool that explains Python terminal errors and suggests practical fixes."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -56,3 +56,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 termdoctor = ["rules/*.yml"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

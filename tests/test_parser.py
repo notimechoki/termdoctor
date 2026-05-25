@@ -3,11 +3,11 @@ from termdoctor.parser import parse_python_error
 
 def test_parse_module_not_found_error():
     text = """
-            Traceback (most recent call last):
-            File "main.py", line 1, in <module>
-                import requests_fake
-            ModuleNotFoundError: No module named 'requests_fake'
-        """
+        Traceback (most recent call last):
+        File "main.py", line 1, in <module>
+            import requests_fake
+        ModuleNotFoundError: No module named 'requests_fake'
+    """
 
     parsed = parse_python_error(text)
 
@@ -20,11 +20,11 @@ def test_parse_module_not_found_error():
 
 def test_parse_name_error():
     text = """
-            Traceback (most recent call last):
-            File "main.py", line 3, in <module>
-                print(username)
-            NameError: name 'username' is not defined
-        """
+        Traceback (most recent call last):
+        File "main.py", line 3, in <module>
+            print(username)
+        NameError: name 'username' is not defined
+    """
 
     parsed = parse_python_error(text)
 
@@ -35,17 +35,99 @@ def test_parse_name_error():
 
 def test_parse_key_error():
     text = """
-            Traceback (most recent call last):
-            File "main.py", line 5, in <module>
-                print(user["name"])
-            KeyError: 'name'
-        """
+        Traceback (most recent call last):
+        File "main.py", line 5, in <module>
+            print(user["name"])
+        KeyError: 'name'
+    """
 
     parsed = parse_python_error(text)
 
     assert parsed is not None
     assert parsed.error_type == "KeyError"
     assert parsed.extracted["key"] == "name"
+
+
+def test_parse_json_decode_error_with_dotted_path():
+    text = """
+        Traceback (most recent call last):
+        File "main.py", line 5, in <module>
+            json.loads("")
+        json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+    """
+
+    parsed = parse_python_error(text)
+
+    assert parsed is not None
+    assert parsed.error_type == "JSONDecodeError"
+    assert parsed.extracted["full_error_type"] == "json.decoder.JSONDecodeError"
+
+
+def test_parse_file_not_found_error():
+    text = """
+        Traceback (most recent call last):
+        File "main.py", line 1, in <module>
+            open("missing.txt")
+        FileNotFoundError: [Errno 2] No such file or directory: 'missing.txt'
+    """
+
+    parsed = parse_python_error(text)
+
+    assert parsed is not None
+    assert parsed.error_type == "FileNotFoundError"
+    assert parsed.extracted["path"] == "missing.txt"
+
+
+def test_parse_attribute_error():
+    text = """
+        Traceback (most recent call last):
+        File "main.py", line 4, in <module>
+            user.name
+        AttributeError: 'NoneType' object has no attribute 'name'
+    """
+
+    parsed = parse_python_error(text)
+
+    assert parsed is not None
+    assert parsed.error_type == "AttributeError"
+    assert parsed.extracted["attribute"] == "name"
+
+
+def test_parse_index_error():
+    text = """
+        Traceback (most recent call last):
+        File "main.py", line 2, in <module>
+            items[10]
+        IndexError: list index out of range
+    """
+
+    parsed = parse_python_error(text)
+
+    assert parsed is not None
+    assert parsed.error_type == "IndexError"
+
+
+def test_parse_chained_exception_takes_last_error():
+    text = """
+        Traceback (most recent call last):
+        File "main.py", line 3, in <module>
+            int("abc")
+        ValueError: invalid literal for int() with base 10: 'abc'
+
+        During handling of the above exception, another exception occurred:
+
+        Traceback (most recent call last):
+        File "main.py", line 5, in <module>
+            print(username)
+        NameError: name 'username' is not defined
+    """
+
+    parsed = parse_python_error(text)
+
+    assert parsed is not None
+    assert parsed.error_type == "NameError"
+    assert parsed.extracted["name"] == "username"
+    assert parsed.line_number == 5
 
 
 def test_returns_none_for_random_text():

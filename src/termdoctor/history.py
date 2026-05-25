@@ -54,6 +54,8 @@ def save_failed_run(command_result: CommandResult, parsed_error: ParsedError | N
         "stderr": command_result.stderr,
         "error_type": parsed_error.error_type if parsed_error else None,
         "error_message": parsed_error.message if parsed_error else None,
+        "file_path": parsed_error.file_path if parsed_error else None,
+        "line_number": parsed_error.line_number if parsed_error else None,
     }
 
     history_items.append(item)
@@ -71,3 +73,23 @@ def get_last_history_item() -> dict[str, Any] | None:
 
 def clear_history() -> None:
     save_history([])
+
+
+def format_history_time(value: str | None) -> str:
+    if not value:
+        return "unknown"
+
+    try:
+        parsed = datetime.fromisoformat(value)
+        return parsed.strftime("%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return value
+
+
+def trim_text(value: str, max_length: int = 80) -> str:
+    normalized = " ".join(value.split())
+
+    if len(normalized) <= max_length:
+        return normalized
+
+    return normalized[: max_length - 1] + "…"

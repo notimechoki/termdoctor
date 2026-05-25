@@ -61,24 +61,21 @@ def run_command(
     ctx: typer.Context,
     command: str | None = typer.Argument(
         None,
-        help='Command to run. Example: termdoctor run "python main.py"',
+        help=(
+            "Command to run. Examples: "
+            'termdoctor run "python main.py" or termdoctor run -- python main.py'
+        ),
     ),
 ) -> None:
-    command_parts: list[str] = []
+    command_to_run = build_command_input(command=command, extra_args=list(ctx.args))
 
-    if command:
-        command_parts.append(command)
-
-    command_parts.extend(ctx.args)
-
-    command_text = " ".join(command_parts).strip()
-
-    if not command_text:
+    if command_to_run is None:
         console.print("[red]Error:[/red] Please provide a command.")
-        console.print('Example: termdoctor run "python main.py"')
+        console.print('Example 1: termdoctor run "python main.py"')
+        console.print("Example 2: termdoctor run -- python main.py")
         raise typer.Exit(code=1)
 
-    command_result = run_shell_command(command_text)
+    command_result = run_shell_command(command_to_run)
 
     if command_result.exit_code == 0:
         render_success(command_result)
@@ -99,6 +96,20 @@ def run_command(
     render_diagnosis(parsed_error, rule, command_result)
 
     raise typer.Exit(code=command_result.exit_code)
+
+
+def build_command_input(command: str | None, extra_args: list[str]) -> str | list[str] | None:
+    if command and extra_args:
+        return [command, *extra_args]
+
+    if command:
+        stripped_command = command.strip()
+        return stripped_command if stripped_command else None
+
+    if extra_args:
+        return extra_args
+
+    return None
 
 
 @app.command("explain")

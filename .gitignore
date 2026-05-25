@@ -8,12 +8,12 @@ __pycache__/
 venv/
 env/
 
-# Build
+# Build / package
 build/
 dist/
 *.egg-info/
 
-# Test/cache
+# Tests / cache
 .pytest_cache/
 .coverage
 htmlcov/
@@ -25,5 +25,5 @@ htmlcov/
 # OS
 .DS_Store
 
-# TermDoctor local files
+# TermDoctor local data
 .termdoctor/

@@ -1,8 +1,8 @@
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 
+from termdoctor.history import format_history_time, trim_text
 from termdoctor.models import CommandResult, ErrorRule, ParsedError
 
 
@@ -12,7 +12,8 @@ console = Console()
 def render_success(command_result: CommandResult) -> None:
     console.print(
         Panel(
-            f"Command finished successfully in {command_result.duration_seconds:.2f}s",
+            f"[bold green]Command completed successfully[/bold green]\n"
+            f"Duration: {command_result.duration_seconds:.2f}s",
             title="TermDoctor",
             border_style="green",
         )
@@ -40,12 +41,10 @@ def render_diagnosis(
 ) -> None:
     console.print()
 
-    title = f"Python error detected: {parsed_error.error_type}"
-
     console.print(
         Panel(
             build_error_summary(parsed_error=parsed_error, command_result=command_result),
-            title=title,
+            title=f"[bold red]Python error detected: {parsed_error.error_type}[/bold red]",
             border_style="red",
         )
     )
@@ -55,15 +54,18 @@ def render_diagnosis(
         return
 
     console.print()
-    console.print(Panel(rule.title, title="What happened", border_style="yellow"))
-
-    explanation = apply_context(rule.explanation, parsed_error)
-    console.print(explanation)
+    console.print(
+        Panel(
+            apply_context(rule.explanation, parsed_error),
+            title=f"[bold yellow]What happened — {rule.title}[/bold yellow]",
+            border_style="yellow",
+        )
+    )
 
     if rule.causes:
         console.print()
-        causes_table = Table(title="Most likely causes", show_header=True, header_style="bold")
-        causes_table.add_column("#", style="cyan", width=4)
+        causes_table = Table(title="Most likely causes", show_header=True, header_style="bold cyan")
+        causes_table.add_column("#", style="cyan", width=4, justify="right")
         causes_table.add_column("Cause")
 
         for index, cause in enumerate(rule.causes, start=1):
@@ -73,8 +75,8 @@ def render_diagnosis(
 
     if rule.fixes:
         console.print()
-        fixes_table = Table(title="What to try", show_header=True, header_style="bold")
-        fixes_table.add_column("#", style="cyan", width=4)
+        fixes_table = Table(title="What to try", show_header=True, header_style="bold green")
+        fixes_table.add_column("#", style="cyan", width=4, justify="right")
         fixes_table.add_column("Suggestion")
 
         for index, fix in enumerate(rule.fixes, start=1):
@@ -106,8 +108,8 @@ def render_no_python_error_found(text: str) -> None:
     console.print(
         Panel(
             "TermDoctor could not detect a Python traceback or a known Python error line.\n\n"
-            "For version 0.1.0, TermDoctor works best with standard Python errors like:\n"
-            "ModuleNotFoundError, NameError, TypeError, SyntaxError, KeyError, etc.",
+            "For version 0.1.1, TermDoctor works best with standard Python errors like:\n"
+            "ModuleNotFoundError, NameError, TypeError, SyntaxError, KeyError, JSONDecodeError, etc.",
             title="No Python error detected",
             border_style="yellow",
         )
@@ -127,25 +129,29 @@ def render_history(items: list[dict]) -> None:
     if not items:
         console.print(
             Panel(
-                "History is empty.",
+                "No saved errors yet.\n\nRun a command first:\ntermdoctor run \"python main.py\"",
                 title="TermDoctor history",
                 border_style="yellow",
             )
         )
         return
 
-    table = Table(title="TermDoctor history")
-    table.add_column("#", style="cyan", width=4)
-    table.add_column("Time")
-    table.add_column("Error")
+    table = Table(title="TermDoctor history", show_lines=False)
+    table.add_column("#", style="cyan", width=4, justify="right")
+    table.add_column("Time", style="dim")
+    table.add_column("Error", style="red")
+    table.add_column("Exit", justify="right")
+    table.add_column("Message")
     table.add_column("Command")
 
     for index, item in enumerate(items, start=1):
         error = item.get("error_type") or "Unknown"
-        command = item.get("command") or ""
-        timestamp = item.get("timestamp") or ""
+        command = trim_text(item.get("command") or "", max_length=50)
+        timestamp = format_history_time(item.get("timestamp"))
+        exit_code = str(item.get("exit_code") or "")
+        message = trim_text(item.get("error_message") or "", max_length=45)
 
-        table.add_row(str(index), timestamp, error, command)
+        table.add_row(str(index), timestamp, error, exit_code, message, command)
 
     console.print(table)
 
@@ -162,6 +168,10 @@ def build_error_summary(
         lines.append(f"Working directory: {command_result.cwd}")
 
     lines.append(f"Error: {parsed_error.error_type}")
+
+    full_error_type = parsed_error.extracted.get("full_error_type")
+    if full_error_type:
+        lines.append(f"Full error type: {full_error_type}")
 
     if parsed_error.message:
         lines.append(f"Message: {parsed_error.message}")
