@@ -3,7 +3,14 @@ from rich.panel import Panel
 from rich.table import Table
 
 from termdoctor.history import format_history_time, trim_text
-from termdoctor.models import CommandResult, ErrorRule, ParsedError
+from termdoctor.models import (
+    CommandResult,
+    ErrorRule,
+    ModuleDiagnosisContext,
+    ParsedError,
+    PythonDoctorResult,
+    PythonEnvironment,
+)
 
 
 console = Console()
@@ -38,6 +45,7 @@ def render_diagnosis(
     parsed_error: ParsedError,
     rule: ErrorRule | None,
     command_result: CommandResult | None = None,
+    module_context: ModuleDiagnosisContext | None = None,
 ) -> None:
     console.print()
 
@@ -48,6 +56,9 @@ def render_diagnosis(
             border_style="red",
         )
     )
+
+    if module_context:
+        render_module_context(module_context)
 
     if rule is None:
         render_unknown_rule(parsed_error)
@@ -84,10 +95,174 @@ def render_diagnosis(
 
         console.print(fixes_table)
 
+    if module_context:
+        render_module_suggestions(module_context)
+
     if rule.examples:
         console.print()
         examples_text = "\n".join(rule.examples)
         console.print(Panel(examples_text, title="Examples", border_style="green"))
+
+
+def render_module_context(context: ModuleDiagnosisContext) -> None:
+    table = Table(title="Environment context", show_header=True, header_style="bold magenta")
+    table.add_column("Item", style="cyan")
+    table.add_column("Value")
+
+    table.add_row("Missing import", context.module_name)
+    table.add_row("Suggested package", context.package_name)
+
+    if context.package_hint:
+        table.add_row("Package hint", f"`{context.module_name}` is usually installed as `{context.package_hint}`")
+
+    table.add_row("Python executable", context.python_executable)
+    table.add_row("Virtual environment", "active" if context.venv_active else "not active")
+    table.add_row("Active venv path", context.active_venv_path or "-")
+    table.add_row("Project venv found", context.project_venv_path or "-")
+    table.add_row("requirements.txt", "found" if context.has_requirements_file else "not found")
+    table.add_row("pyproject.toml", "found" if context.has_pyproject_file else "not found")
+    table.add_row("Package in requirements.txt", "yes" if context.in_requirements else "no")
+    table.add_row("Package in pyproject.toml", "yes" if context.in_pyproject else "no")
+
+    console.print()
+    console.print(table)
+
+
+def render_module_suggestions(context: ModuleDiagnosisContext) -> None:
+    suggestions: list[str] = []
+
+    if context.package_hint:
+        suggestions.append(f"Install the package with: pip install {context.package_hint}")
+
+    if context.project_venv_path and not context.venv_active:
+        suggestions.append("Activate the project virtual environment before running the command again.")
+
+    if context.in_requirements:
+        suggestions.append("The package is listed in requirements.txt. Try: pip install -r requirements.txt")
+
+    if context.in_pyproject:
+        suggestions.append("The package is listed in pyproject.toml. Try: pip install -e .")
+
+    if not context.in_requirements and not context.in_pyproject:
+        suggestions.append(f"If this is a third-party package, install it with: pip install {context.package_name}")
+
+    if not suggestions:
+        return
+
+    table = Table(title="Environment-aware suggestions", show_header=True, header_style="bold green")
+    table.add_column("#", style="cyan", width=4, justify="right")
+    table.add_column("Suggestion")
+
+    for index, suggestion in enumerate(deduplicate(suggestions), start=1):
+        table.add_row(str(index), suggestion)
+
+    console.print()
+    console.print(table)
+
+
+def render_python_environment(environment: PythonEnvironment) -> None:
+    console.print()
+    console.print(
+        Panel(
+            "Current Python environment and project files detected in this directory.",
+            title="[bold blue]Python environment[/bold blue]",
+            border_style="blue",
+        )
+    )
+
+    table = Table(show_header=True, header_style="bold cyan")
+    table.add_column("Item", style="cyan")
+    table.add_column("Value")
+
+    table.add_row("Python version", environment.python_version)
+    table.add_row("Python executable", environment.python_executable)
+    table.add_row("Working directory", environment.cwd)
+    table.add_row("Virtual environment", "active" if environment.venv_active else "not active")
+    table.add_row("Active venv path", environment.active_venv_path or "-")
+    table.add_row("Project venv found", environment.project_venv_path or "-")
+    table.add_row("requirements.txt", environment.requirements_file or "-")
+    table.add_row("pyproject.toml", environment.pyproject_file or "-")
+    table.add_row(".env", environment.env_file or "-")
+    table.add_row(".env.example", environment.env_example_file or "-")
+    table.add_row("tests directory", environment.tests_dir or "-")
+
+    console.print(table)
+
+    render_dependency_summary(environment)
+
+
+def render_dependency_summary(environment: PythonEnvironment) -> None:
+    dependency_info = environment.dependency_info
+
+    if not dependency_info.requirements_dependencies and not dependency_info.pyproject_dependencies:
+        console.print()
+        console.print(
+            Panel(
+                "No dependencies were detected in requirements.txt or pyproject.toml.",
+                title="Dependencies",
+                border_style="yellow",
+            )
+        )
+        return
+
+    table = Table(title="Detected dependencies", show_header=True, header_style="bold green")
+    table.add_column("Source", style="cyan")
+    table.add_column("Packages")
+
+    if dependency_info.requirements_dependencies:
+        table.add_row("requirements.txt", ", ".join(dependency_info.requirements_dependencies))
+
+    if dependency_info.pyproject_dependencies:
+        table.add_row("pyproject.toml", ", ".join(dependency_info.pyproject_dependencies))
+
+    console.print()
+    console.print(table)
+
+
+def render_python_doctor(result: PythonDoctorResult) -> None:
+    console.print()
+    console.print(
+        Panel(
+            "Python project diagnosis based on the current directory.",
+            title="[bold blue]TermDoctor Python doctor[/bold blue]",
+            border_style="blue",
+        )
+    )
+
+    checks_table = Table(title="Checks", show_header=True, header_style="bold cyan")
+    checks_table.add_column("Status", width=8)
+    checks_table.add_column("Check")
+
+    for label, ok in result.checks:
+        status = "[green]OK[/green]" if ok else "[yellow]WARN[/yellow]"
+        checks_table.add_row(status, label)
+
+    console.print(checks_table)
+
+    if result.warnings:
+        warnings_table = Table(title="Warnings", show_header=True, header_style="bold yellow")
+        warnings_table.add_column("#", style="cyan", width=4, justify="right")
+        warnings_table.add_column("Warning")
+
+        for index, warning in enumerate(result.warnings, start=1):
+            warnings_table.add_row(str(index), warning)
+
+        console.print()
+        console.print(warnings_table)
+
+    if result.suggestions:
+        suggestions_table = Table(title="Suggestions", show_header=True, header_style="bold green")
+        suggestions_table.add_column("#", style="cyan", width=4, justify="right")
+        suggestions_table.add_column("Suggestion")
+
+        for index, suggestion in enumerate(result.suggestions, start=1):
+            suggestions_table.add_row(str(index), suggestion)
+
+        console.print()
+        console.print(suggestions_table)
+
+    console.print()
+    render_python_environment(result.environment)
 
 
 def render_unknown_rule(parsed_error: ParsedError) -> None:
@@ -108,7 +283,7 @@ def render_no_python_error_found(text: str) -> None:
     console.print(
         Panel(
             "TermDoctor could not detect a Python traceback or a known Python error line.\n\n"
-            "For version 0.1.1, TermDoctor works best with standard Python errors like:\n"
+            "For version 0.2.0, TermDoctor works best with standard Python errors like:\n"
             "ModuleNotFoundError, NameError, TypeError, SyntaxError, KeyError, JSONDecodeError, etc.",
             title="No Python error detected",
             border_style="yellow",
@@ -204,3 +379,17 @@ def apply_context(text: str, parsed_error: ParsedError) -> str:
         return text.format(**context)
     except KeyError:
         return text
+
+
+def deduplicate(items: list[str]) -> list[str]:
+    result: list[str] = []
+    seen: set[str] = set()
+
+    for item in items:
+        if item in seen:
+            continue
+
+        seen.add(item)
+        result.append(item)
+
+    return result

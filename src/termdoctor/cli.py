@@ -4,6 +4,11 @@ import sys
 import typer
 
 from termdoctor import __version__
+from termdoctor.environment import (
+    build_module_diagnosis_context,
+    diagnose_python_project,
+    get_python_environment,
+)
 from termdoctor.history import (
     clear_history,
     get_last_history_item,
@@ -18,6 +23,8 @@ from termdoctor.renderer import (
     render_diagnosis,
     render_history,
     render_no_python_error_found,
+    render_python_doctor,
+    render_python_environment,
     render_success,
 )
 from termdoctor.runner import run_shell_command
@@ -29,6 +36,15 @@ app = typer.Typer(
     add_completion=False,
     no_args_is_help=True,
 )
+
+doctor_app = typer.Typer(
+    name="doctor",
+    help="Run project-level diagnostics.",
+    add_completion=False,
+    no_args_is_help=True,
+)
+
+app.add_typer(doctor_app, name="doctor")
 
 
 def version_callback(value: bool) -> None:
@@ -93,7 +109,15 @@ def run_command(
         raise typer.Exit(code=command_result.exit_code)
 
     rule = find_rule(parsed_error)
-    render_diagnosis(parsed_error, rule, command_result)
+    module_context = None
+
+    if parsed_error.error_type == "ModuleNotFoundError":
+        module_name = parsed_error.extracted.get("module")
+
+        if module_name:
+            module_context = build_module_diagnosis_context(module_name)
+
+    render_diagnosis(parsed_error, rule, command_result, module_context=module_context)
 
     raise typer.Exit(code=command_result.exit_code)
 
@@ -110,6 +134,18 @@ def build_command_input(command: str | None, extra_args: list[str]) -> str | lis
         return extra_args
 
     return None
+
+
+@app.command("env")
+def show_environment() -> None:
+    environment = get_python_environment()
+    render_python_environment(environment)
+
+
+@doctor_app.command("python")
+def doctor_python() -> None:
+    result = diagnose_python_project()
+    render_python_doctor(result)
 
 
 @app.command("explain")
@@ -146,7 +182,15 @@ def explain_error(
         raise typer.Exit(code=1)
 
     rule = find_rule(parsed_error)
-    render_diagnosis(parsed_error, rule)
+    module_context = None
+
+    if parsed_error.error_type == "ModuleNotFoundError":
+        module_name = parsed_error.extracted.get("module")
+
+        if module_name:
+            module_context = build_module_diagnosis_context(module_name)
+
+    render_diagnosis(parsed_error, rule, module_context=module_context)
 
 
 @app.command("paste")
@@ -164,7 +208,15 @@ def paste_error() -> None:
         raise typer.Exit(code=1)
 
     rule = find_rule(parsed_error)
-    render_diagnosis(parsed_error, rule)
+    module_context = None
+
+    if parsed_error.error_type == "ModuleNotFoundError":
+        module_name = parsed_error.extracted.get("module")
+
+        if module_name:
+            module_context = build_module_diagnosis_context(module_name)
+
+    render_diagnosis(parsed_error, rule, module_context=module_context)
 
 
 @app.command("history")

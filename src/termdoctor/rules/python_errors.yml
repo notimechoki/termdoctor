@@ -32,15 +32,15 @@
   title: "Python cannot find a module"
   explanation: "Python tried to import `{module}`, but it is not available in the current environment."
   causes:
-    - "The package is not installed."
+    - "The package is not installed in the Python environment used to run this command."
     - "The virtual environment is not activated."
     - "You are using a different Python interpreter."
-    - "The import name is different from the package name."
+    - "The import name may be different from the package name used for installation."
   fixes:
-    - "Activate your virtual environment."
-    - "Install the missing package: pip install {module}"
-    - "Check requirements.txt or pyproject.toml."
-    - "Run python -m pip show {module} to check whether the package is installed."
+    - "Check the environment context shown by TermDoctor."
+    - "Activate your project virtual environment if one exists."
+    - "Install project dependencies from requirements.txt or pyproject.toml if they are available."
+    - "If TermDoctor shows a package hint, install that package name instead of the import name."
 
 - id: import_error
   error: ImportError

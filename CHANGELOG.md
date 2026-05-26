@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.2.0 - Python Environment Awareness
+
+### Added
+
+- Added `termdoctor env`.
+- Added `termdoctor doctor python`.
+- Added Python version detection.
+- Added Python executable detection.
+- Added virtual environment detection.
+- Added project virtual environment detection.
+- Added `requirements.txt` detection.
+- Added basic `requirements.txt` dependency parsing.
+- Added `pyproject.toml` detection.
+- Added basic `[project] dependencies` parsing from `pyproject.toml`.
+- Added package-name hints for common import/package mismatches.
+- Added environment-aware context for `ModuleNotFoundError`.
+- Added environment/dependency tests.
+- Added `examples/missing_dotenv.py`.
+
+### Improved
+
+- Improved `ModuleNotFoundError` diagnosis.
+- Improved suggestions when a project virtual environment exists but is not active.
+- Improved suggestions when a missing package is already listed in `requirements.txt`.
+- Improved suggestions when a missing package is already listed in `pyproject.toml`.
+- Improved terminal output with environment context tables.
+
+### Changed
+
+- Updated package version to `0.2.0`.
+- Updated `ModuleNotFoundError` rule to avoid blindly suggesting `pip install {module}` in every case.
+- Added `tomli` fallback dependency for Python 3.10 compatibility.
+
 ## 0.1.1 - Stability Patch
 
 ### Added

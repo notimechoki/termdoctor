@@ -42,3 +42,64 @@ class ErrorRule:
             match=list(data.get("match", [])),
             examples=list(data.get("examples", [])),
         )
+
+@dataclass
+class DependencyInfo:
+    requirements_file: str | None
+    pyproject_file: str | None
+    requirements_dependencies: list[str] = field(default_factory=list)
+    pyproject_dependencies: list[str] = field(default_factory=list)
+
+    @property
+    def all_dependencies(self) -> list[str]:
+        seen: set[str] = set()
+        dependencies: list[str] = []
+
+        for dependency in [*self.requirements_dependencies, *self.pyproject_dependencies]:
+            normalized = dependency.lower()
+
+            if normalized in seen:
+                continue
+
+            seen.add(normalized)
+            dependencies.append(dependency)
+
+        return dependencies
+    
+@dataclass
+class PythonEnvironment:
+    python_version: str
+    python_executable: str
+    cwd: str
+    venv_active: bool
+    active_venv_path: str | None
+    project_venv_path: str | None
+    requirements_file: str | None
+    pyproject_file: str | None
+    env_file: str | None
+    env_example_file: str | None
+    tests_dir: str | None
+    dependency_info: DependencyInfo
+
+
+@dataclass
+class ModuleDiagnosisContext:
+    module_name: str
+    package_name: str
+    package_hint: str | None
+    in_requirements: bool
+    in_pyproject: bool
+    has_requirements_file: bool
+    has_pyproject_file: bool
+    venv_active: bool
+    active_venv_path: str | None
+    project_venv_path: str | None
+    python_executable: str
+
+
+@dataclass
+class PythonDoctorResult:
+    environment: PythonEnvironment
+    checks: list[tuple[str, bool]]
+    warnings: list[str]
+    suggestions: list[str]
