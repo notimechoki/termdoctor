@@ -10,6 +10,12 @@ IMPORT_PACKAGE_MAP: dict[str, str] = {
     "dateutil": "python-dateutil",
     "magic": "python-magic",
     "slugify": "python-slugify",
+    "serial": "pyserial",
+    "psycopg2": "psycopg2-binary",
+    "multipart": "python-multipart",
+    "decouple": "python-decouple",
+    "environ": "django-environ",
+    "mysql": "mysqlclient",
 }
 
 

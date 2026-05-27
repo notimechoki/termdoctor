@@ -2,6 +2,7 @@ from termdoctor.dependencies import (
     collect_dependency_info,
     dependency_exists,
     normalize_package_name,
+    parse_include_path,
     parse_pyproject_dependencies,
     parse_requirement_name,
     parse_requirements_txt,
@@ -18,18 +19,26 @@ def test_parse_requirement_name():
     assert parse_requirement_name("requests==2.32.3") == "requests"
     assert parse_requirement_name("uvicorn[standard]>=0.29.0") == "uvicorn"
     assert parse_requirement_name("python-dotenv>=1.0.0") == "python-dotenv"
+    assert parse_requirement_name("django-environ ; python_version >= '3.10'") == "django-environ"
     assert parse_requirement_name("# comment") is None
     assert parse_requirement_name("-r base.txt") is None
+
+
+def test_parse_include_path():
+    assert parse_include_path("-r requirements/base.txt") == "requirements/base.txt"
+    assert parse_include_path("--requirement requirements/dev.txt") == "requirements/dev.txt"
+    assert parse_include_path("-r=requirements/prod.txt") == "requirements/prod.txt"
+    assert parse_include_path("requests==2.32.3") is None
 
 
 def test_parse_requirements_txt(tmp_path):
     requirements = tmp_path / "requirements.txt"
     requirements.write_text(
         """
-            requests==2.32.3
-            python-dotenv>=1.0.0
-            uvicorn[standard]>=0.29.0
-            # comment
+        requests==2.32.3
+        python-dotenv>=1.0.0
+        uvicorn[standard]>=0.29.0
+        # comment
         """,
         encoding="utf-8",
     )
@@ -41,16 +50,44 @@ def test_parse_requirements_txt(tmp_path):
     assert "uvicorn" in dependencies
 
 
+def test_parse_requirements_txt_with_nested_files(tmp_path):
+    requirements_dir = tmp_path / "requirements"
+    requirements_dir.mkdir()
+
+    base = requirements_dir / "base.txt"
+    base.write_text("fastapi>=0.110.0\npython-multipart\n", encoding="utf-8")
+
+    dev = requirements_dir / "dev.txt"
+    dev.write_text("pytest>=8.0.0\n", encoding="utf-8")
+
+    requirements = tmp_path / "requirements.txt"
+    requirements.write_text(
+        """
+        -r requirements/base.txt
+        --requirement requirements/dev.txt
+        requests==2.32.3
+        """,
+        encoding="utf-8",
+    )
+
+    dependencies = parse_requirements_txt(requirements)
+
+    assert "fastapi" in dependencies
+    assert "python-multipart" in dependencies
+    assert "pytest" in dependencies
+    assert "requests" in dependencies
+
+
 def test_parse_pyproject_dependencies(tmp_path):
     pyproject = tmp_path / "pyproject.toml"
     pyproject.write_text(
         """
-            [project]
-            dependencies = [
-                "typer>=0.12.0",
-                "rich>=13.7.0",
-                "PyYAML>=6.0.1"
-            ]
+        [project]
+        dependencies = [
+            "typer>=0.12.0",
+            "rich>=13.7.0",
+            "PyYAML>=6.0.1"
+        ]
         """,
         encoding="utf-8",
     )
@@ -69,10 +106,10 @@ def test_collect_dependency_info(tmp_path):
     pyproject = tmp_path / "pyproject.toml"
     pyproject.write_text(
         """
-            [project]
-            dependencies = [
-                "typer>=0.12.0"
-            ]
+        [project]
+        dependencies = [
+            "typer>=0.12.0"
+        ]
         """,
         encoding="utf-8",
     )
@@ -93,5 +130,7 @@ def test_dependency_exists():
 
 def test_package_hints():
     assert get_package_hint("dotenv") == "python-dotenv"
+    assert get_package_hint("multipart") == "python-multipart"
+    assert get_package_hint("psycopg2") == "psycopg2-binary"
     assert get_install_name("dotenv") == "python-dotenv"
     assert get_install_name("requests") == "requests"

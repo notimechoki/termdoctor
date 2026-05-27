@@ -115,10 +115,13 @@ def render_module_context(context: ModuleDiagnosisContext) -> None:
     if context.package_hint:
         table.add_row("Package hint", f"`{context.module_name}` is usually installed as `{context.package_hint}`")
 
+    table.add_row("Current directory", context.current_dir)
+    table.add_row("Project root", context.project_root)
     table.add_row("Python executable", context.python_executable)
     table.add_row("Virtual environment", "active" if context.venv_active else "not active")
     table.add_row("Active venv path", context.active_venv_path or "-")
     table.add_row("Project venv found", context.project_venv_path or "-")
+    table.add_row("Activation command", context.activation_command or "-")
     table.add_row("requirements.txt", "found" if context.has_requirements_file else "not found")
     table.add_row("pyproject.toml", "found" if context.has_pyproject_file else "not found")
     table.add_row("Package in requirements.txt", "yes" if context.in_requirements else "no")
@@ -135,7 +138,10 @@ def render_module_suggestions(context: ModuleDiagnosisContext) -> None:
         suggestions.append(f"Install the package with: pip install {context.package_hint}")
 
     if context.project_venv_path and not context.venv_active:
-        suggestions.append("Activate the project virtual environment before running the command again.")
+        if context.activation_command:
+            suggestions.append(f"Activate the project virtual environment: {context.activation_command}")
+        else:
+            suggestions.append("Activate the project virtual environment before running the command again.")
 
     if context.in_requirements:
         suggestions.append("The package is listed in requirements.txt. Try: pip install -r requirements.txt")
@@ -164,7 +170,7 @@ def render_python_environment(environment: PythonEnvironment) -> None:
     console.print()
     console.print(
         Panel(
-            "Current Python environment and project files detected in this directory.",
+            "Current Python environment and project files detected by TermDoctor.",
             title="[bold blue]Python environment[/bold blue]",
             border_style="blue",
         )
@@ -176,10 +182,12 @@ def render_python_environment(environment: PythonEnvironment) -> None:
 
     table.add_row("Python version", environment.python_version)
     table.add_row("Python executable", environment.python_executable)
-    table.add_row("Working directory", environment.cwd)
+    table.add_row("Current directory", environment.current_dir)
+    table.add_row("Project root", environment.project_root)
     table.add_row("Virtual environment", "active" if environment.venv_active else "not active")
     table.add_row("Active venv path", environment.active_venv_path or "-")
     table.add_row("Project venv found", environment.project_venv_path or "-")
+    table.add_row("Activation command", environment.activation_command or "-")
     table.add_row("requirements.txt", environment.requirements_file or "-")
     table.add_row("pyproject.toml", environment.pyproject_file or "-")
     table.add_row(".env", environment.env_file or "-")
@@ -223,7 +231,7 @@ def render_python_doctor(result: PythonDoctorResult) -> None:
     console.print()
     console.print(
         Panel(
-            "Python project diagnosis based on the current directory.",
+            "Python project diagnosis based on the detected project root.",
             title="[bold blue]TermDoctor Python doctor[/bold blue]",
             border_style="blue",
         )
@@ -283,7 +291,7 @@ def render_no_python_error_found(text: str) -> None:
     console.print(
         Panel(
             "TermDoctor could not detect a Python traceback or a known Python error line.\n\n"
-            "For version 0.2.0, TermDoctor works best with standard Python errors like:\n"
+            "For version 0.2.1, TermDoctor works best with standard Python errors like:\n"
             "ModuleNotFoundError, NameError, TypeError, SyntaxError, KeyError, JSONDecodeError, etc.",
             title="No Python error detected",
             border_style="yellow",

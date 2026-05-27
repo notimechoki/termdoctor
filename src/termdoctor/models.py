@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any
 
+
 @dataclass
 class CommandResult:
     command: str
@@ -10,6 +11,7 @@ class CommandResult:
     stderr: str
     duration_seconds: float
 
+
 @dataclass
 class ParsedError:
     error_type: str
@@ -18,6 +20,7 @@ class ParsedError:
     file_path: str | None = None
     line_number: int | None = None
     extracted: dict[str, str] = field(default_factory=dict)
+
 
 @dataclass
 class ErrorRule:
@@ -43,6 +46,7 @@ class ErrorRule:
             examples=list(data.get("examples", [])),
         )
 
+
 @dataclass
 class DependencyInfo:
     requirements_file: str | None
@@ -65,15 +69,19 @@ class DependencyInfo:
             dependencies.append(dependency)
 
         return dependencies
-    
+
+
 @dataclass
 class PythonEnvironment:
     python_version: str
     python_executable: str
+    current_dir: str
+    project_root: str
     cwd: str
     venv_active: bool
     active_venv_path: str | None
     project_venv_path: str | None
+    activation_command: str | None
     requirements_file: str | None
     pyproject_file: str | None
     env_file: str | None
@@ -94,7 +102,10 @@ class ModuleDiagnosisContext:
     venv_active: bool
     active_venv_path: str | None
     project_venv_path: str | None
+    activation_command: str | None
     python_executable: str
+    current_dir: str
+    project_root: str
 
 
 @dataclass
