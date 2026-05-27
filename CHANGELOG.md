@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.1 - Environment Polish
+
+### Added
+
+- Added project root detection from nested directories.
+- Added OS-aware virtual environment activation hints.
+- Added support for nested requirements files with `-r` / `--requirement`.
+- Added more package hints for common Python imports.
+- Added tests for project root detection, platform utilities, and CLI commands.
+
+### Improved
+
+- Improved `termdoctor env` output with current directory and project root.
+- Improved `termdoctor doctor python` suggestions for virtual environments.
+- Improved `ModuleNotFoundError` environment context.
+- Improved dependency parsing for more real-world requirements files.
+
+
 All notable changes to this project will be documented in this file.
 
 ## 0.2.0 - Python Environment Awareness

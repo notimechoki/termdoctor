@@ -21,7 +21,7 @@
   <a href="https://pyyaml.org/">
     <img src="https://img.shields.io/badge/PyYAML-Rules-FFCA28?style=for-the-badge" alt="PyYAML">
   </a>
-  <img src="https://img.shields.io/badge/Version-0.2.0-blue?style=for-the-badge" alt="Version 0.2.0">
+  <img src="https://img.shields.io/badge/Version-0.2.1-blue?style=for-the-badge" alt="Version 0.2.1">
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License">
 </p>
 
@@ -40,7 +40,7 @@ TermDoctor can also inspect the current Python environment, detect dependency fi
 ## Current version
 
 ```text
-0.2.0
+0.2.1
 ```
 
 TermDoctor is currently focused on Python errors only.
@@ -204,7 +204,7 @@ termdoctor --version
 Expected output:
 
 ```text
-TermDoctor 0.2.0
+TermDoctor 0.2.1
 ```
 
 ### Show Python environment
