@@ -27,6 +27,7 @@ from termdoctor.renderer import (
     render_python_environment,
     render_success,
 )
+from termdoctor.report import build_markdown_report, write_report
 from termdoctor.runner import run_shell_command
 
 
@@ -191,6 +192,38 @@ def explain_error(
             module_context = build_module_diagnosis_context(module_name)
 
     render_diagnosis(parsed_error, rule, module_context=module_context)
+
+
+@app.command("report")
+def create_report(
+    source: str = typer.Argument(
+        "last",
+        help='Use "last" or provide a path to a file with a Python traceback.',
+    ),
+    output: str | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Write the Markdown report to a file.",
+    ),
+    show_raw: bool = typer.Option(
+        True,
+        "--show-raw/--no-raw",
+        help="Include or exclude the raw traceback in the report.",
+    ),
+) -> None:
+    try:
+        markdown = build_markdown_report(source=source, include_raw=show_raw)
+    except ValueError as exc:
+        console.print(f"[red]Error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    if output:
+        path = write_report(markdown, output)
+        console.print(f"[green]Report written to:[/green] {path}")
+        raise typer.Exit(code=0)
+
+    console.print(markdown)
 
 
 @app.command("paste")

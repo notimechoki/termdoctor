@@ -68,3 +68,29 @@ def test_find_rule_returns_none_for_unknown_error():
     rule = find_rule(parsed)
 
     assert rule is None
+
+def test_find_rule_for_unbound_local_error():
+    parsed = ParsedError(
+        error_type="UnboundLocalError",
+        message="cannot access local variable 'count' where it is not associated with a value",
+        raw_text="UnboundLocalError: cannot access local variable 'count' where it is not associated with a value",
+        extracted={"name": "count"},
+    )
+
+    rule = find_rule(parsed)
+
+    assert rule is not None
+    assert rule.error == "UnboundLocalError"
+
+
+def test_find_rule_for_assertion_error():
+    parsed = ParsedError(
+        error_type="AssertionError",
+        message="",
+        raw_text="AssertionError",
+    )
+
+    rule = find_rule(parsed)
+
+    assert rule is not None
+    assert rule.error == "AssertionError"

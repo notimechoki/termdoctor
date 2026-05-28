@@ -7,7 +7,7 @@ ERROR_LINE_PATTERN = re.compile(
     r"^(?P<full_error_type>"
     r"(?:[A-Za-z_][A-Za-z0-9_]*\.)*"
     r"(?:[A-Za-z_][A-Za-z0-9_]*(?:Error|Exception|Warning)"
-    r"|KeyboardInterrupt|SystemExit|StopIteration|StopAsyncIteration))"
+    r"|KeyboardInterrupt|SystemExit|StopIteration|StopAsyncIteration|MemoryError))"
     r"(?::\s*(?P<message>.*))?$"
 )
 
@@ -111,6 +111,21 @@ def extract_details(error_type: str, message: str) -> dict[str, str]:
         if name_match:
             extracted["name"] = name_match.group("name")
 
+    if error_type == "UnboundLocalError":
+        name_match = re.search(
+            r"(?:local variable|free variable) ['\"](?P<name>[^'\"]+)['\"]",
+            message,
+        )
+
+        if not name_match:
+            name_match = re.search(
+                r"cannot access local variable ['\"](?P<name>[^'\"]+)['\"]",
+                message,
+            )
+
+        if name_match:
+            extracted["name"] = name_match.group("name")
+
     if error_type == "ImportError":
         import_match = re.search(r"cannot import name ['\"](?P<name>[^'\"]+)['\"]", message)
 
@@ -123,8 +138,8 @@ def extract_details(error_type: str, message: str) -> dict[str, str]:
         if key_match:
             extracted["key"] = key_match.group("key")
 
-    if error_type == "FileNotFoundError":
-        file_match = re.search(r"No such file or directory: ['\"](?P<path>[^'\"]+)['\"]", message)
+    if error_type in {"FileNotFoundError", "IsADirectoryError", "NotADirectoryError"}:
+        file_match = re.search(r": ['\"](?P<path>[^'\"]+)['\"]", message)
 
         if file_match:
             extracted["path"] = file_match.group("path")

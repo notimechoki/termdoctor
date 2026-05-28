@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.2.2 - Reports & Better Python Diagnosis
+
+### Added
+
+- Added `termdoctor report`.
+- Added Markdown report generation from the last saved error.
+- Added Markdown report generation from a traceback file.
+- Added `--output` for writing reports to a file.
+- Added `--show-raw/--no-raw` for including or excluding raw traceback in reports.
+- Added `src/termdoctor/report.py`.
+- Added rules for more Python errors:
+  - `UnboundLocalError`
+  - `AssertionError`
+  - `RuntimeError`
+  - `OSError`
+  - `IsADirectoryError`
+  - `NotADirectoryError`
+  - `EOFError`
+  - `ConnectionError`
+  - `TimeoutError`
+  - `BrokenPipeError`
+  - `MemoryError`
+- Added more Python error examples.
+- Added tests for report generation.
+- Added parser tests for additional Python errors.
+- Added matcher tests for additional Python rules.
+- Added CLI tests for the report command.
+
+### Improved
+
+- Improved Python traceback detail extraction for `UnboundLocalError`.
+- Improved path extraction for `IsADirectoryError` and `NotADirectoryError`.
+- Improved project usefulness by making errors easier to share through Markdown reports.
+
+### Changed
+
+- Updated package version to `0.2.2`.
+
 ## 0.2.1 - Environment Polish
 
 ### Added
@@ -16,9 +54,6 @@
 - Improved `termdoctor doctor python` suggestions for virtual environments.
 - Improved `ModuleNotFoundError` environment context.
 - Improved dependency parsing for more real-world requirements files.
-
-
-All notable changes to this project will be documented in this file.
 
 ## 0.2.0 - Python Environment Awareness
 

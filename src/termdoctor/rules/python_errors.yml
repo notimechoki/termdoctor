@@ -219,3 +219,152 @@
     - "Print the raw JSON text before parsing."
     - "Validate the JSON in a JSON formatter."
     - "Check whether the API returned an error page instead of JSON."
+
+- id: unbound_local_error
+  error: UnboundLocalError
+  title: "Local variable is used before assignment"
+  explanation: "Python treats `{name}` as a local variable inside the function, but the code tries to use it before assigning a value."
+  causes:
+    - "A variable is assigned somewhere inside a function, so Python considers it local."
+    - "The variable is read before the assignment happens."
+    - "You expected to use a global variable, but Python created a local scope."
+  fixes:
+    - "Assign `{name}` before reading it."
+    - "Pass `{name}` as a function argument instead of relying on outer scope."
+    - "Avoid changing a global variable inside a function unless you really need to."
+    - "If you intentionally need a global variable, use the global keyword carefully."
+
+- id: assertion_error
+  error: AssertionError
+  title: "Assertion failed"
+  explanation: "An assert statement or test assertion expected something to be true, but it was false."
+  causes:
+    - "The actual value does not match the expected value."
+    - "A test condition is wrong."
+    - "The code under test returned an unexpected result."
+  fixes:
+    - "Check the assertion condition."
+    - "Print or inspect the actual value before the assertion."
+    - "If this happened in a test, compare expected and actual values."
+    - "Make sure the input data matches what the assertion expects."
+
+- id: runtime_error
+  error: RuntimeError
+  title: "Runtime error"
+  explanation: "Python detected a problem while the program was running. RuntimeError is often raised when the operation is not allowed in the current state."
+  causes:
+    - "The program reached an invalid state."
+    - "A library raised RuntimeError for a framework-specific reason."
+    - "An async/event loop operation was used incorrectly."
+  fixes:
+    - "Read the full error message carefully. RuntimeError usually explains the specific condition."
+    - "Check the code around {file_path}:{line_number}."
+    - "If a framework is involved, check whether the operation is allowed at that point."
+    - "Search for the exact RuntimeError message in the library documentation."
+
+- id: os_error
+  error: OSError
+  title: "Operating system error"
+  explanation: "Python asked the operating system to do something, but the OS could not complete the operation."
+  causes:
+    - "A file, directory, permission, device, or network resource is unavailable."
+    - "The path is invalid."
+    - "The process does not have enough permissions."
+  fixes:
+    - "Check the full error message for the OS-level reason."
+    - "Check paths, permissions, and whether the resource exists."
+    - "If this is a network operation, check connectivity and host/port values."
+
+- id: is_a_directory_error
+  error: IsADirectoryError
+  title: "Expected a file, got a directory"
+  explanation: "Python expected a file path, but `{path}` points to a directory."
+  causes:
+    - "You passed a directory path to a function that expects a file."
+    - "The file name is missing from the path."
+    - "The path variable contains the wrong value."
+  fixes:
+    - "Pass a full file path, not just a directory path."
+    - "Check the value of the path variable."
+    - "If you want to read files from a directory, iterate through the directory contents first."
+
+- id: not_a_directory_error
+  error: NotADirectoryError
+  title: "Expected a directory, got a file"
+  explanation: "Python expected part of the path to be a directory, but it found a file instead."
+  causes:
+    - "A path segment points to a file when Python expected a folder."
+    - "The path was built incorrectly."
+    - "A file and directory have conflicting names."
+  fixes:
+    - "Check every part of the path."
+    - "Print the path before using it."
+    - "Make sure parent folders exist and are actually directories."
+
+- id: eof_error
+  error: EOFError
+  title: "Input ended unexpectedly"
+  explanation: "Python expected input, but reached the end of input instead."
+  causes:
+    - "input() was called when no input was available."
+    - "The program is running in a non-interactive environment."
+    - "A file or stream ended earlier than expected."
+  fixes:
+    - "Do not call input() unless the user can actually type something."
+    - "Provide input through stdin if the script expects it."
+    - "Handle EOFError with try/except when input may be missing."
+
+- id: connection_error
+  error: ConnectionError
+  title: "Network connection failed"
+  explanation: "Python could not complete a network connection."
+  causes:
+    - "The server is down or unreachable."
+    - "The host or port is incorrect."
+    - "The network connection is blocked or unstable."
+  fixes:
+    - "Check the URL, host, and port."
+    - "Check whether the target service is running."
+    - "Retry the request after confirming network connectivity."
+    - "Add timeout and error handling for network calls."
+
+- id: timeout_error
+  error: TimeoutError
+  title: "Operation timed out"
+  explanation: "An operation took too long and Python stopped waiting for it."
+  causes:
+    - "A network request is too slow."
+    - "A service is not responding."
+    - "A file, socket, or process operation is blocked."
+  fixes:
+    - "Check whether the external service is available."
+    - "Increase the timeout only if the operation is expected to take longer."
+    - "Add retry logic if this is a network request."
+    - "Handle TimeoutError with try/except."
+
+- id: broken_pipe_error
+  error: BrokenPipeError
+  title: "Broken pipe"
+  explanation: "Python tried to write data to a pipe or connection that was already closed by the other side."
+  causes:
+    - "The receiving process closed before Python finished writing."
+    - "Output was piped to a command that stopped early."
+    - "A network socket was closed."
+  fixes:
+    - "Check the command or process receiving the output."
+    - "Handle BrokenPipeError if writing to pipes or sockets."
+    - "Avoid writing after the connection is closed."
+
+- id: memory_error
+  error: MemoryError
+  title: "Not enough memory"
+  explanation: "Python could not allocate enough memory for the operation."
+  causes:
+    - "The program is loading too much data into memory."
+    - "A loop or recursion is creating too many objects."
+    - "The machine does not have enough available RAM."
+  fixes:
+    - "Process data in smaller chunks."
+    - "Avoid loading huge files completely into memory."
+    - "Check for infinite loops or uncontrolled list growth."
+    - "Use generators or streaming when possible."

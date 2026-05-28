@@ -136,3 +136,49 @@ def test_returns_none_for_random_text():
     parsed = parse_python_error(text)
 
     assert parsed is None
+
+
+def test_parse_unbound_local_error():
+    text = """
+        Traceback (most recent call last):
+        File "main.py", line 5, in <module>
+            show_count()
+        File "main.py", line 2, in show_count
+            print(count)
+        UnboundLocalError: cannot access local variable 'count' where it is not associated with a value
+        """
+
+    parsed = parse_python_error(text)
+
+    assert parsed is not None
+    assert parsed.error_type == "UnboundLocalError"
+    assert parsed.extracted["name"] == "count"
+
+
+def test_parse_assertion_error_without_message():
+    text = """
+        Traceback (most recent call last):
+        File "main.py", line 4, in <module>
+            assert actual == expected
+        AssertionError
+        """
+
+    parsed = parse_python_error(text)
+
+    assert parsed is not None
+    assert parsed.error_type == "AssertionError"
+
+
+def test_parse_is_a_directory_error_path():
+    text = """
+        Traceback (most recent call last):
+        File "main.py", line 3, in <module>
+            open("demo_folder")
+        IsADirectoryError: [Errno 21] Is a directory: 'demo_folder'
+        """
+
+    parsed = parse_python_error(text)
+
+    assert parsed is not None
+    assert parsed.error_type == "IsADirectoryError"
+    assert parsed.extracted["path"] == "demo_folder"
