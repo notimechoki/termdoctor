@@ -7,7 +7,10 @@ ERROR_LINE_PATTERN = re.compile(
     r"^(?P<full_error_type>"
     r"(?:[A-Za-z_][A-Za-z0-9_]*\.)*"
     r"(?:[A-Za-z_][A-Za-z0-9_]*(?:Error|Exception|Warning)"
-    r"|KeyboardInterrupt|SystemExit|StopIteration|StopAsyncIteration|MemoryError))"
+    r"|KeyboardInterrupt|SystemExit|StopIteration|StopAsyncIteration|MemoryError"
+    r"|ImproperlyConfigured|NoReverseMatch|TemplateDoesNotExist|FixtureLookupError"
+    r"|TelegramBadRequest|TelegramUnauthorized|TelegramForbidden|TelegramNotFound"
+    r"|TelegramConflict|TelegramRetryAfter|TelegramMigrateToChat|TelegramNetworkError))"
     r"(?::\s*(?P<message>.*))?$"
 )
 
@@ -61,7 +64,7 @@ def parse_python_error(text: str) -> ParsedError | None:
     if not error_type:
         return None
 
-    extracted = extract_details(error_type=error_type, message=message)
+    extracted = extract_details(error_type=error_type, message=message, raw_text=cleaned_text)
 
     if full_error_type and full_error_type != error_type:
         extracted["full_error_type"] = full_error_type
@@ -96,7 +99,7 @@ def normalize_error_type(error_type: str) -> str:
     return error_type.split(".")[-1]
 
 
-def extract_details(error_type: str, message: str) -> dict[str, str]:
+def extract_details(error_type: str, message: str, raw_text: str = "") -> dict[str, str]:
     extracted: dict[str, str] = {}
 
     if error_type == "ModuleNotFoundError":
@@ -155,5 +158,17 @@ def extract_details(error_type: str, message: str) -> dict[str, str]:
 
     if error_type == "JSONDecodeError":
         extracted["json_hint"] = "The input is not valid JSON."
+
+    if error_type in {"OperationalError", "IntegrityError", "ProgrammingError", "DatabaseError"}:
+        relation_match = re.search(r'relation ["\']?(?P<relation>[A-Za-z0-9_\.]+)["\']? does not exist', raw_text)
+
+        if relation_match:
+            extracted["relation"] = relation_match.group("relation")
+
+    if error_type in {"ValidationError", "ResponseValidationError"}:
+        field_match = re.search(r"(?:field required|Field required).*?(?P<field>[A-Za-z_][A-Za-z0-9_]*)", raw_text, re.IGNORECASE)
+
+        if field_match:
+            extracted["field"] = field_match.group("field")
 
     return extracted

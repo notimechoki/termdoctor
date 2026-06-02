@@ -6,6 +6,7 @@ from termdoctor.history import format_history_time, trim_text
 from termdoctor.models import (
     CommandResult,
     ErrorRule,
+    FrameworkDiagnosisContext,
     ModuleDiagnosisContext,
     ParsedError,
     PythonDoctorResult,
@@ -46,6 +47,7 @@ def render_diagnosis(
     rule: ErrorRule | None,
     command_result: CommandResult | None = None,
     module_context: ModuleDiagnosisContext | None = None,
+    framework_context: FrameworkDiagnosisContext | None = None,
 ) -> None:
     console.print()
 
@@ -56,6 +58,9 @@ def render_diagnosis(
             border_style="red",
         )
     )
+
+    if framework_context:
+        render_framework_context(framework_context)
 
     if module_context:
         render_module_context(module_context)
@@ -102,6 +107,28 @@ def render_diagnosis(
         console.print()
         examples_text = "\n".join(rule.examples)
         console.print(Panel(examples_text, title="Examples", border_style="green"))
+
+
+def render_framework_context(context: FrameworkDiagnosisContext) -> None:
+    table = Table(title="Framework context", show_header=True, header_style="bold magenta")
+    table.add_column("Item", style="cyan")
+    table.add_column("Value")
+
+    table.add_row("Matched framework", context.matched_framework or "-")
+
+    if context.detected_frameworks:
+        detected = ", ".join(framework.name for framework in context.detected_frameworks)
+        table.add_row("Detected in project", detected)
+    else:
+        table.add_row("Detected in project", "-")
+
+    if context.evidence:
+        table.add_row("Evidence", ", ".join(context.evidence))
+    else:
+        table.add_row("Evidence", "-")
+
+    console.print()
+    console.print(table)
 
 
 def render_module_context(context: ModuleDiagnosisContext) -> None:
@@ -197,6 +224,7 @@ def render_python_environment(environment: PythonEnvironment) -> None:
     console.print(table)
 
     render_dependency_summary(environment)
+    render_detected_frameworks(environment)
 
 
 def render_dependency_summary(environment: PythonEnvironment) -> None:
@@ -222,6 +250,32 @@ def render_dependency_summary(environment: PythonEnvironment) -> None:
 
     if dependency_info.pyproject_dependencies:
         table.add_row("pyproject.toml", ", ".join(dependency_info.pyproject_dependencies))
+
+    console.print()
+    console.print(table)
+
+
+def render_detected_frameworks(environment: PythonEnvironment) -> None:
+    detected_frameworks = environment.framework_info.detected_frameworks
+
+    if not detected_frameworks:
+        console.print()
+        console.print(
+            Panel(
+                "No supported Python frameworks were detected in this project.",
+                title="Detected frameworks",
+                border_style="yellow",
+            )
+        )
+        return
+
+    table = Table(title="Detected frameworks", show_header=True, header_style="bold green")
+    table.add_column("Framework", style="cyan")
+    table.add_column("Evidence")
+
+    for framework in detected_frameworks:
+        evidence = ", ".join(framework.evidence) if framework.evidence else "-"
+        table.add_row(framework.name, evidence)
 
     console.print()
     console.print(table)
@@ -291,8 +345,7 @@ def render_no_python_error_found(text: str) -> None:
     console.print(
         Panel(
             "TermDoctor could not detect a Python traceback or a known Python error line.\n\n"
-            "For version 0.2.1, TermDoctor works best with standard Python errors like:\n"
-            "ModuleNotFoundError, NameError, TypeError, SyntaxError, KeyError, JSONDecodeError, etc.",
+            "For version 0.2.3, TermDoctor works best with standard Python errors and supported Python framework tracebacks.",
             title="No Python error detected",
             border_style="yellow",
         )
@@ -381,6 +434,8 @@ def apply_context(text: str, parsed_error: ParsedError) -> str:
         "key": parsed_error.extracted.get("key", "the missing key"),
         "path": parsed_error.extracted.get("path", "the missing path"),
         "attribute": parsed_error.extracted.get("attribute", "the missing attribute"),
+        "relation": parsed_error.extracted.get("relation", "the missing relation"),
+        "field": parsed_error.extracted.get("field", "the invalid field"),
     }
 
     try:

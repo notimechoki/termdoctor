@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "db.py", line 12, in <module>
+    session.execute(text("select * from users"))
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) connection refused

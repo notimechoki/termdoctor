@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "bot.py", line 10, in <module>
+    bot.send_message(chat_id, text)
+telebot.apihelper.ApiTelegramException: A request to the Telegram API was unsuccessful. Error code: 400. Description: Bad Request: chat not found

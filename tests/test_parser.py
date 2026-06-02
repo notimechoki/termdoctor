@@ -182,3 +182,47 @@ def test_parse_is_a_directory_error_path():
     assert parsed is not None
     assert parsed.error_type == "IsADirectoryError"
     assert parsed.extracted["path"] == "demo_folder"
+
+def test_parse_django_no_reverse_match():
+    text = """
+        Traceback (most recent call last):
+        File "views.py", line 10, in <module>
+            reverse("missing-route")
+        django.urls.exceptions.NoReverseMatch: Reverse for 'missing-route' not found.
+        """
+
+    parsed = parse_python_error(text)
+
+    assert parsed is not None
+    assert parsed.error_type == "NoReverseMatch"
+    assert parsed.extracted["full_error_type"] == "django.urls.exceptions.NoReverseMatch"
+
+
+def test_parse_fastapi_response_validation_error():
+    text = """
+        Traceback (most recent call last):
+        File "main.py", line 20, in <module>
+            raise ResponseValidationError(errors=[])
+        fastapi.exceptions.ResponseValidationError: 1 validation errors
+        """
+
+    parsed = parse_python_error(text)
+
+    assert parsed is not None
+    assert parsed.error_type == "ResponseValidationError"
+    assert parsed.extracted["full_error_type"] == "fastapi.exceptions.ResponseValidationError"
+
+
+def test_parse_aiogram_telegram_bad_request():
+    text = """
+        Traceback (most recent call last):
+        File "bot.py", line 15, in handler
+            await message.answer("<b>broken")
+        aiogram.exceptions.TelegramBadRequest: Telegram server says - Bad Request: can't parse entities
+        """
+
+    parsed = parse_python_error(text)
+
+    assert parsed is not None
+    assert parsed.error_type == "TelegramBadRequest"
+    assert parsed.extracted["full_error_type"] == "aiogram.exceptions.TelegramBadRequest"

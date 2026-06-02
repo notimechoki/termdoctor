@@ -16,6 +16,15 @@ IMPORT_PACKAGE_MAP: dict[str, str] = {
     "decouple": "python-decouple",
     "environ": "django-environ",
     "mysql": "mysqlclient",
+    "MySQLdb": "mysqlclient",
+    "flask_sqlalchemy": "Flask-SQLAlchemy",
+    "flask_migrate": "Flask-Migrate",
+    "rest_framework": "djangorestframework",
+    "corsheaders": "django-cors-headers",
+    "telebot": "pyTelegramBotAPI",
+    "aiogram": "aiogram",
+    "sqlalchemy": "SQLAlchemy",
+    "alembic": "alembic",
 }
 
 

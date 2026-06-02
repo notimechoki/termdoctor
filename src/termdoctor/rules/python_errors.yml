@@ -368,3 +368,140 @@
     - "Avoid loading huge files completely into memory."
     - "Check for infinite loops or uncontrolled list growth."
     - "Use generators or streaming when possible."
+- id: django_improperly_configured
+  error: ImproperlyConfigured
+  match:
+    - "django.core.exceptions.ImproperlyConfigured"
+  title: "Django configuration is invalid"
+  explanation: "Django could not start because a required setting, app, middleware, template, database, or environment value is configured incorrectly."
+  causes:
+    - "DJANGO_SETTINGS_MODULE is missing or points to the wrong settings module."
+    - "A required environment variable is missing."
+    - "INSTALLED_APPS, MIDDLEWARE, DATABASES, TEMPLATES, or static/media settings contain an invalid value."
+    - "A package required by Django settings is not installed."
+  fixes:
+    - "Check your settings.py file and the exact message above."
+    - "Check DJANGO_SETTINGS_MODULE and environment variables."
+    - "Verify INSTALLED_APPS and MIDDLEWARE entries."
+    - "Run the command from the Django project root where manage.py exists."
+
+- id: django_no_reverse_match
+  error: NoReverseMatch
+  match:
+    - "NoReverseMatch"
+    - "django.urls.exceptions.NoReverseMatch"
+  title: "Django could not build a URL"
+  explanation: "Django tried to reverse a URL name, but it could not find a matching URL pattern or the required parameters were missing."
+  causes:
+    - "The URL name is misspelled."
+    - "The app namespace is missing or incorrect."
+    - "The URL pattern requires arguments that were not provided."
+    - "The URL is not included in the project's urls.py."
+  fixes:
+    - "Check the name= value in your path() or re_path()."
+    - "Check app_name and namespace usage."
+    - "Pass required args or kwargs to reverse(), redirect(), or the url template tag."
+    - "Make sure the app urls.py is included in the root urls.py."
+
+- id: fastapi_response_validation_error
+  error: ResponseValidationError
+  match:
+    - "fastapi.exceptions.ResponseValidationError"
+    - "ResponseValidationError"
+  title: "FastAPI response does not match response_model"
+  explanation: "FastAPI tried to validate the returned response against response_model, but the returned data does not match the declared schema."
+  causes:
+    - "The endpoint returns missing fields."
+    - "The endpoint returns values with the wrong type."
+    - "response_model is too strict for the returned data."
+  fixes:
+    - "Check the endpoint return value."
+    - "Check response_model fields and types."
+    - "Make optional fields Optional or provide default values where appropriate."
+    - "Return data that matches the Pydantic model."
+
+- id: sqlalchemy_operational_error
+  error: OperationalError
+  match:
+    - "sqlalchemy.exc.OperationalError"
+  title: "SQLAlchemy database connection or operation failed"
+  explanation: "SQLAlchemy could not complete a database operation. This is often a database URL, network, server, credentials, or migration problem."
+  causes:
+    - "The database server is not running."
+    - "The DATABASE_URL is wrong."
+    - "The database or table does not exist."
+    - "Migrations were not applied."
+  fixes:
+    - "Check DATABASE_URL and environment variables."
+    - "Make sure the database server is running."
+    - "Apply migrations with Alembic if the schema is missing."
+    - "Check the original DBAPI error inside the traceback."
+
+- id: alembic_command_error
+  error: CommandError
+  match:
+    - "alembic.util.exc.CommandError"
+    - "Can't locate revision"
+    - "Target database is not up to date"
+  title: "Alembic migration command failed"
+  explanation: "Alembic could not complete a migration command. This usually means revision history, migration files, or database migration state is inconsistent."
+  causes:
+    - "A migration revision ID is missing."
+    - "The database is not upgraded to the expected revision."
+    - "alembic.ini or env.py is configured incorrectly."
+  fixes:
+    - "Run alembic current to inspect the current DB revision."
+    - "Run alembic history to inspect available revisions."
+    - "Run alembic upgrade head if the database is behind."
+    - "Check alembic.ini and migrations/env.py."
+
+- id: pytest_fixture_lookup_error
+  error: FixtureLookupError
+  match:
+    - "FixtureLookupError"
+    - "fixture"
+  title: "pytest fixture was not found"
+  explanation: "pytest could not find the requested fixture."
+  causes:
+    - "The fixture name is misspelled."
+    - "The fixture is not defined in this test file or conftest.py."
+    - "The fixture is defined in a plugin that is not installed or not enabled."
+  fixes:
+    - "Check the fixture name."
+    - "Define the fixture in the test file or conftest.py."
+    - "Check installed pytest plugins."
+    - "Run pytest --fixtures to list available fixtures."
+
+- id: aiogram_telegram_bad_request
+  error: TelegramBadRequest
+  match:
+    - "aiogram.exceptions.TelegramBadRequest"
+    - "TelegramBadRequest"
+  title: "aiogram Telegram Bad Request"
+  explanation: "Telegram rejected an aiogram API request because the request data is invalid."
+  causes:
+    - "The chat_id, message_id, callback data, markup, or text is invalid."
+    - "The bot tried to edit/delete/send something that Telegram does not allow."
+    - "HTML/Markdown formatting is invalid."
+  fixes:
+    - "Read Telegram's exact error description in the message."
+    - "Check chat_id, message_id, and reply_markup."
+    - "Validate parse_mode formatting."
+    - "Handle TelegramBadRequest with try/except when the action may fail."
+
+- id: pytelegrambotapi_api_exception
+  error: ApiTelegramException
+  match:
+    - "telebot.apihelper.ApiTelegramException"
+    - "ApiTelegramException"
+  title: "pyTelegramBotAPI Telegram API error"
+  explanation: "Telegram returned an API error while pyTelegramBotAPI was calling a bot method."
+  causes:
+    - "The bot token, chat_id, message_id, parse mode, or reply markup is invalid."
+    - "Telegram rejected the requested action."
+    - "The bot has no permission for the target chat/action."
+  fixes:
+    - "Read the Telegram error code and description."
+    - "Check bot token and chat permissions."
+    - "Check parse_mode formatting and reply_markup."
+    - "Wrap risky Telegram calls in try/except."

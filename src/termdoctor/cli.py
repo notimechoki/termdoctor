@@ -9,6 +9,7 @@ from termdoctor.environment import (
     diagnose_python_project,
     get_python_environment,
 )
+from termdoctor.frameworks import build_framework_diagnosis_context
 from termdoctor.history import (
     clear_history,
     get_last_history_item,
@@ -109,16 +110,7 @@ def run_command(
         render_no_python_error_found(text_to_parse)
         raise typer.Exit(code=command_result.exit_code)
 
-    rule = find_rule(parsed_error)
-    module_context = None
-
-    if parsed_error.error_type == "ModuleNotFoundError":
-        module_name = parsed_error.extracted.get("module")
-
-        if module_name:
-            module_context = build_module_diagnosis_context(module_name)
-
-    render_diagnosis(parsed_error, rule, command_result, module_context=module_context)
+    render_parsed_error(parsed_error, command_result=command_result)
 
     raise typer.Exit(code=command_result.exit_code)
 
@@ -135,6 +127,29 @@ def build_command_input(command: str | None, extra_args: list[str]) -> str | lis
         return extra_args
 
     return None
+
+
+def render_parsed_error(parsed_error, command_result=None) -> None:
+    rule = find_rule(parsed_error)
+    environment = get_python_environment()
+
+    module_context = None
+
+    if parsed_error.error_type == "ModuleNotFoundError":
+        module_name = parsed_error.extracted.get("module")
+
+        if module_name:
+            module_context = build_module_diagnosis_context(module_name)
+
+    framework_context = build_framework_diagnosis_context(parsed_error, environment.framework_info)
+
+    render_diagnosis(
+        parsed_error,
+        rule,
+        command_result,
+        module_context=module_context,
+        framework_context=framework_context,
+    )
 
 
 @app.command("env")
@@ -182,16 +197,7 @@ def explain_error(
         render_no_python_error_found(text)
         raise typer.Exit(code=1)
 
-    rule = find_rule(parsed_error)
-    module_context = None
-
-    if parsed_error.error_type == "ModuleNotFoundError":
-        module_name = parsed_error.extracted.get("module")
-
-        if module_name:
-            module_context = build_module_diagnosis_context(module_name)
-
-    render_diagnosis(parsed_error, rule, module_context=module_context)
+    render_parsed_error(parsed_error)
 
 
 @app.command("report")
@@ -240,16 +246,7 @@ def paste_error() -> None:
         render_no_python_error_found(text)
         raise typer.Exit(code=1)
 
-    rule = find_rule(parsed_error)
-    module_context = None
-
-    if parsed_error.error_type == "ModuleNotFoundError":
-        module_name = parsed_error.extracted.get("module")
-
-        if module_name:
-            module_context = build_module_diagnosis_context(module_name)
-
-    render_diagnosis(parsed_error, rule, module_context=module_context)
+    render_parsed_error(parsed_error)
 
 
 @app.command("history")

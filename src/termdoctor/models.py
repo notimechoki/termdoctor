@@ -72,6 +72,31 @@ class DependencyInfo:
 
 
 @dataclass
+class FrameworkInfo:
+    name: str
+    detected: bool
+    evidence: list[str] = field(default_factory=list)
+
+
+@dataclass
+class FrameworkDetectionResult:
+    frameworks: list[FrameworkInfo] = field(default_factory=list)
+
+    @property
+    def detected_frameworks(self) -> list[FrameworkInfo]:
+        return [framework for framework in self.frameworks if framework.detected]
+
+    def is_detected(self, name: str) -> bool:
+        normalized = name.lower()
+
+        for framework in self.frameworks:
+            if framework.name.lower() == normalized and framework.detected:
+                return True
+
+        return False
+
+
+@dataclass
 class PythonEnvironment:
     python_version: str
     python_executable: str
@@ -88,6 +113,7 @@ class PythonEnvironment:
     env_example_file: str | None
     tests_dir: str | None
     dependency_info: DependencyInfo
+    framework_info: FrameworkDetectionResult
 
 
 @dataclass
@@ -106,6 +132,13 @@ class ModuleDiagnosisContext:
     python_executable: str
     current_dir: str
     project_root: str
+
+
+@dataclass
+class FrameworkDiagnosisContext:
+    detected_frameworks: list[FrameworkInfo]
+    matched_framework: str | None
+    evidence: list[str] = field(default_factory=list)
 
 
 @dataclass

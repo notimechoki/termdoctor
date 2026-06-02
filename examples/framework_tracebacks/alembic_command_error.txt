@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "alembic", line 8, in <module>
+    sys.exit(main())
+alembic.util.exc.CommandError: Can't locate revision identified by 'abc123'

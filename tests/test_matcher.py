@@ -94,3 +94,58 @@ def test_find_rule_for_assertion_error():
 
     assert rule is not None
     assert rule.error == "AssertionError"
+
+def test_find_rule_for_django_no_reverse_match():
+    parsed = ParsedError(
+        error_type="NoReverseMatch",
+        message="Reverse for 'missing-route' not found",
+        raw_text="django.urls.exceptions.NoReverseMatch: Reverse for 'missing-route' not found",
+        extracted={"full_error_type": "django.urls.exceptions.NoReverseMatch"},
+    )
+
+    rule = find_rule(parsed)
+
+    assert rule is not None
+    assert rule.id == "django_no_reverse_match"
+
+
+def test_find_rule_for_fastapi_response_validation_error():
+    parsed = ParsedError(
+        error_type="ResponseValidationError",
+        message="1 validation errors",
+        raw_text="fastapi.exceptions.ResponseValidationError: 1 validation errors",
+        extracted={"full_error_type": "fastapi.exceptions.ResponseValidationError"},
+    )
+
+    rule = find_rule(parsed)
+
+    assert rule is not None
+    assert rule.id == "fastapi_response_validation_error"
+
+
+def test_find_rule_for_sqlalchemy_operational_error():
+    parsed = ParsedError(
+        error_type="OperationalError",
+        message="connection refused",
+        raw_text="sqlalchemy.exc.OperationalError: connection refused",
+        extracted={"full_error_type": "sqlalchemy.exc.OperationalError"},
+    )
+
+    rule = find_rule(parsed)
+
+    assert rule is not None
+    assert rule.id == "sqlalchemy_operational_error"
+
+
+def test_find_rule_for_aiogram_bad_request():
+    parsed = ParsedError(
+        error_type="TelegramBadRequest",
+        message="Bad Request: can't parse entities",
+        raw_text="aiogram.exceptions.TelegramBadRequest: Bad Request: can't parse entities",
+        extracted={"full_error_type": "aiogram.exceptions.TelegramBadRequest"},
+    )
+
+    rule = find_rule(parsed)
+
+    assert rule is not None
+    assert rule.id == "aiogram_telegram_bad_request"

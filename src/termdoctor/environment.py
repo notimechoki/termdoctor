@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from termdoctor.dependencies import collect_dependency_info, dependency_exists
+from termdoctor.frameworks import detect_frameworks
 from termdoctor.models import ModuleDiagnosisContext, PythonDoctorResult, PythonEnvironment
 from termdoctor.package_hints import get_install_name, get_package_hint
 from termdoctor.platform_utils import get_activation_command
@@ -14,6 +15,7 @@ def get_python_environment(cwd: Path | None = None) -> PythonEnvironment:
     project_root = find_project_root(current_dir)
 
     dependency_info = collect_dependency_info(project_root)
+    framework_info = detect_frameworks(project_root, dependency_info.all_dependencies)
 
     active_venv_path = get_active_venv_path()
     project_venv_path = find_project_venv(project_root)
@@ -41,6 +43,7 @@ def get_python_environment(cwd: Path | None = None) -> PythonEnvironment:
         env_example_file=env_example_file,
         tests_dir=tests_dir,
         dependency_info=dependency_info,
+        framework_info=framework_info,
     )
 
 
@@ -129,6 +132,9 @@ def diagnose_python_project(cwd: Path | None = None) -> PythonDoctorResult:
         ("tests directory found", environment.tests_dir is not None),
     ]
 
+    for framework in environment.framework_info.frameworks:
+        checks.append((f"{framework.name} detected", framework.detected))
+
     warnings: list[str] = []
     suggestions: list[str] = []
 
@@ -161,12 +167,48 @@ def diagnose_python_project(cwd: Path | None = None) -> PythonDoctorResult:
         warnings.append("tests directory was not found.")
         suggestions.append("Add tests/ if this project is meant to be maintained or shared.")
 
+    add_framework_suggestions(environment, warnings, suggestions)
+
     return PythonDoctorResult(
         environment=environment,
         checks=checks,
         warnings=warnings,
         suggestions=deduplicate(suggestions),
     )
+
+
+def add_framework_suggestions(
+    environment: PythonEnvironment,
+    warnings: list[str],
+    suggestions: list[str],
+) -> None:
+    frameworks = environment.framework_info
+
+    if frameworks.is_detected("Django"):
+        if not (Path(environment.project_root) / "manage.py").exists():
+            warnings.append("Django dependency was detected, but manage.py was not found.")
+        suggestions.append("For Django errors, check settings.py, INSTALLED_APPS, database settings, templates, and URL names.")
+
+    if frameworks.is_detected("FastAPI"):
+        suggestions.append("For FastAPI errors, check request/response models, Pydantic validation, and Uvicorn import paths.")
+
+    if frameworks.is_detected("Flask"):
+        suggestions.append("For Flask errors, check app factory/import path, routes, templates, and environment variables.")
+
+    if frameworks.is_detected("SQLAlchemy"):
+        suggestions.append("For SQLAlchemy errors, check database URL, sessions, models, relationships, and applied migrations.")
+
+    if frameworks.is_detected("Alembic"):
+        suggestions.append("For Alembic errors, check alembic.ini, env.py, revision IDs, and migration state.")
+
+    if frameworks.is_detected("pytest"):
+        suggestions.append("For pytest errors, check test discovery, fixture names, conftest.py, and assertion output.")
+
+    if frameworks.is_detected("aiogram"):
+        suggestions.append("For aiogram errors, check bot token, router registration, async handlers, and Telegram API error details.")
+
+    if frameworks.is_detected("pyTelegramBotAPI"):
+        suggestions.append("For pyTelegramBotAPI errors, check bot token, handler filters, polling/webhook mode, and Telegram API error details.")
 
 
 def deduplicate(items: list[str]) -> list[str]:
