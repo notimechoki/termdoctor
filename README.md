@@ -5,23 +5,14 @@
 <h1 align="center">TermDoctor</h1>
 
 <p align="center">
-  <strong>A CLI tool that explains Python terminal errors and suggests practical fixes.</strong>
+  <strong>A CLI tool that explains terminal errors and suggests practical fixes.</strong>
 </p>
 
 <p align="center">
-  <a href="https://www.python.org/">
-    <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+">
-  </a>
-  <a href="https://typer.tiangolo.com/">
-    <img src="https://img.shields.io/badge/Typer-CLI-009688?style=for-the-badge" alt="Typer">
-  </a>
-  <a href="https://github.com/Textualize/rich">
-    <img src="https://img.shields.io/badge/Rich-Terminal_UI-4B8BBE?style=for-the-badge" alt="Rich">
-  </a>
-  <a href="https://pyyaml.org/">
-    <img src="https://img.shields.io/badge/PyYAML-Rules-FFCA28?style=for-the-badge" alt="PyYAML">
-  </a>
-  <img src="https://img.shields.io/badge/Version-0.2.3-blue?style=for-the-badge" alt="Version 0.2.3">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/Typer-CLI-009688?style=for-the-badge" alt="Typer">
+  <img src="https://img.shields.io/badge/Rich-Terminal_UI-4B8BBE?style=for-the-badge" alt="Rich">
+  <img src="https://img.shields.io/badge/Version-0.3.0-blue?style=for-the-badge" alt="Version 0.3.0">
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License">
 </p>
 
@@ -29,82 +20,53 @@
 
 ## What is TermDoctor?
 
-**TermDoctor** is a local command-line tool that explains Python terminal errors and suggests practical fixes.
+**TermDoctor** is a command-line debugging assistant.
 
-It reads Python tracebacks, detects the error type, matches it with rule-based explanations, checks the current Python project context, and prints a clearer diagnosis.
+It runs a command, captures the error output, detects the language engine, parses the traceback, explains the error in clear English, and suggests practical fixes.
 
-TermDoctor does not use AI and does not send your code, errors, or environment data anywhere.
+Current stable engine:
+
+| Engine | Status |
+|---|---|
+| Python | Supported |
+
+TermDoctor is now built around a language engine architecture, so additional engines can be added later without mixing all parsers and rules into one file.
 
 ---
 
 ## Current version
 
 ```text
-0.2.3
+0.3.0
 ```
-
-This version focuses on **better Python and Python framework diagnosis**.
 
 ---
 
 ## What TermDoctor currently supports
 
-### Language support
+### Python support
 
-| Language | Support status |
+TermDoctor supports standard Python tracebacks, Python environment inspection, dependency inspection, Markdown reports, and framework-aware diagnosis for common Python ecosystems.
+
+### Framework-aware Python diagnosis
+
+| Ecosystem | Support |
 |---|---|
-| Python | Supported |
-| JavaScript / TypeScript | Not supported |
-| Go | Not supported |
-| Rust | Not supported |
-| Java | Not supported |
-| Bash / Shell | Not supported |
-
-### Python ecosystem support
-
-| Source / framework | Support status |
-|---|---|
-| Python scripts | Supported |
-| Python modules | Supported |
-| Django | Supported for common traceback patterns |
-| FastAPI | Supported for common traceback patterns |
-| Flask | Supported for common traceback patterns |
-| SQLAlchemy | Supported for common traceback patterns |
-| Alembic | Supported for common traceback patterns |
-| pytest | Supported for common traceback patterns |
-| aiogram | Supported for common Telegram API traceback patterns |
-| pyTelegramBotAPI | Supported for common Telegram API traceback patterns |
-| Pydantic | Supported for common validation errors |
-| Docker logs | Not supported |
-| live server logs | Not supported |
-
----
-
-## Supported commands
-
-| Command | Description |
-|---|---|
-| `termdoctor --help` | Show help |
-| `termdoctor --version` | Show current version |
-| `termdoctor run "command"` | Run a command and explain Python errors |
-| `termdoctor run -- python main.py` | Run a command in safer argument mode |
-| `termdoctor env` | Show Python environment, dependencies, and detected frameworks |
-| `termdoctor doctor python` | Diagnose the current Python project |
-| `termdoctor explain last` | Explain the last saved error |
-| `termdoctor explain error.txt` | Explain a traceback from a file |
-| `termdoctor paste` | Paste a traceback manually |
-| `termdoctor report last` | Generate a Markdown report from the last saved error |
-| `termdoctor report error.txt` | Generate a Markdown report from a traceback file |
-| `termdoctor report last --output report.md` | Save a Markdown report to a file |
-| `termdoctor history` | Show saved failed command history |
-| `termdoctor history --limit 5` | Show a limited number of history items |
-| `termdoctor clear` | Clear saved history |
+| Django | Supported |
+| FastAPI | Supported |
+| Flask | Supported |
+| Pydantic | Supported |
+| SQLAlchemy | Supported |
+| Alembic | Supported |
+| pytest | Supported |
+| aiogram | Supported |
+| pyTelegramBotAPI | Supported |
 
 ---
 
 ## Installation
 
-### Install directly from GitHub with pipx
+### Install from GitHub with pipx
 
 ```bash
 pipx install git+https://github.com/notimechoki/termdoctor.git
@@ -113,21 +75,11 @@ pipx install git+https://github.com/notimechoki/termdoctor.git
 Check:
 
 ```bash
+termdoctor --version
 termdoctor --help
 ```
 
-If `pipx` is not installed:
-
-```bash
-python -m pip install --user pipx
-python -m pipx ensurepath
-```
-
-Restart your terminal after `pipx ensurepath`.
-
----
-
-### Install from a local clone
+### Install from local clone
 
 ```bash
 git clone https://github.com/notimechoki/termdoctor.git
@@ -140,81 +92,138 @@ pip install -e .
 termdoctor --help
 ```
 
-On Windows PowerShell:
+### Development install
 
-```powershell
+```bash
 git clone https://github.com/notimechoki/termdoctor.git
 cd termdoctor
 
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+source .venv/bin/activate
 
-pip install -e .
-termdoctor --help
+pip install -e ".[dev]"
+pytest
 ```
 
 ---
 
-## Usage examples
+## Commands
 
-### Run a Python file
+| Command | Description |
+|---|---|
+| `termdoctor --help` | Show help |
+| `termdoctor --version` | Show version |
+| `termdoctor languages` | Show registered language engines |
+| `termdoctor run -- python main.py` | Run a command and diagnose errors |
+| `termdoctor explain error.txt` | Explain traceback from file |
+| `termdoctor explain error.txt --lang python` | Force Python engine |
+| `termdoctor paste` | Paste traceback manually |
+| `termdoctor report last` | Generate Markdown report from last error |
+| `termdoctor report error.txt --output report.md` | Write report to file |
+| `termdoctor env` | Show Python project environment |
+| `termdoctor doctor python` | Run Python project diagnostics |
+| `termdoctor history` | Show failed command history |
+| `termdoctor clear` | Clear history |
+
+---
+
+## Examples
+
+### Run Python file
 
 ```bash
-termdoctor run -- python main.py
+termdoctor run -- python examples/name_error.py
 ```
 
-### Run Django
+### Explain framework traceback
 
 ```bash
-termdoctor run -- python manage.py migrate
-termdoctor run -- python manage.py runserver
+termdoctor explain examples/framework_tracebacks/django_no_reverse_match.txt
+termdoctor explain examples/framework_tracebacks/fastapi_response_validation_error.txt
+termdoctor explain examples/framework_tracebacks/sqlalchemy_operational_error.txt
 ```
 
-### Run FastAPI / Uvicorn
+### Force Python engine
 
 ```bash
-termdoctor run -- uvicorn app.main:app --reload
+termdoctor explain examples/framework_tracebacks/django_no_reverse_match.txt --lang python
 ```
 
-### Run pytest
+### Generate report
 
 ```bash
-termdoctor run -- pytest
+termdoctor run -- python examples/name_error.py
+termdoctor report last --output reports/name-error.md
 ```
 
-### Explain the last saved error
+### Check registered engines
 
 ```bash
-termdoctor explain last
+termdoctor languages
 ```
 
-### Generate a Markdown report
+Output:
 
-```bash
-termdoctor report last --output reports/error-report.md
+```text
+Supported language engines
+- Python (python)
 ```
 
-### Check the environment
+---
 
-```bash
-termdoctor env
+## How language engines work
+
+TermDoctor has a small core and language-specific engines.
+
+Current structure:
+
+```text
+termdoctor core
+├── LanguageDetector
+├── BaseEngine
+├── engine registry
+└── PythonEngine
 ```
 
-### Diagnose the Python project
+The Python engine owns:
 
-```bash
-termdoctor doctor python
+- Python command detection;
+- Python traceback parsing;
+- Python rule loading;
+- Python rule matching;
+- Python environment context;
+- Python framework context.
+
+This keeps future JavaScript, Bash, Docker, Go, or Rust support separate from the Python logic.
+
+---
+
+## Project structure
+
+```text
+src/termdoctor/
+├── engines/
+│   ├── base.py
+│   ├── detector.py
+│   ├── registry.py
+│   ├── python_engine.py
+│   └── python/
+│       └── rules.yml
+├── cli.py
+├── parser.py
+├── matcher.py
+├── rules_loader.py
+├── renderer.py
+├── environment.py
+├── frameworks.py
+├── dependencies.py
+├── report.py
+└── runner.py
 ```
 
 ---
 
 ## Development
-
-Install development dependencies:
-
-```bash
-pip install -e ".[dev]"
-```
 
 Run tests:
 
@@ -222,44 +231,21 @@ Run tests:
 pytest
 ```
 
-Run example tracebacks:
+Run a few manual checks:
 
 ```bash
+termdoctor --version
+termdoctor languages
+termdoctor run -- python examples/name_error.py
 termdoctor explain examples/framework_tracebacks/django_no_reverse_match.txt
-termdoctor explain examples/framework_tracebacks/fastapi_response_validation_error.txt
-termdoctor explain examples/framework_tracebacks/sqlalchemy_operational_error.txt
-termdoctor explain examples/framework_tracebacks/alembic_command_error.txt
-termdoctor explain examples/framework_tracebacks/pytest_fixture_error.txt
-termdoctor explain examples/framework_tracebacks/aiogram_bad_request.txt
-termdoctor explain examples/framework_tracebacks/pytelegrambotapi_api_exception.txt
-```
-
----
-
-## How it works
-
-TermDoctor works with rule-based logic:
-
-1. Runs a command or reads a traceback.
-2. Parses the Python traceback.
-3. Detects the normalized error type.
-4. Matches the error against YAML diagnosis rules.
-5. Checks the project environment.
-6. Detects known Python frameworks from dependencies and project files.
-7. Shows diagnosis, likely causes, and suggestions.
-8. Optionally generates a Markdown report.
-
-Rules are stored here:
-
-```text
-src/termdoctor/rules/python_errors.yml
+termdoctor report examples/framework_tracebacks/django_no_reverse_match.txt --output reports/django-report.md
 ```
 
 ---
 
 ## Changelog
 
-See full release notes in [CHANGELOG.md](CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 

@@ -1,4 +1,4 @@
-from termdoctor.parser import parse_python_error
+from termdoctor.engines.python.parser import parse_python_error
 
 
 def test_parse_module_not_found_error():

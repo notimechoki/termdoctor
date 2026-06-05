@@ -4,20 +4,15 @@ import sys
 import typer
 
 from termdoctor import __version__
-from termdoctor.environment import (
-    build_module_diagnosis_context,
-    diagnose_python_project,
-    get_python_environment,
-)
-from termdoctor.frameworks import build_framework_diagnosis_context
-from termdoctor.history import (
+from termdoctor.core.history import (
     clear_history,
     get_last_history_item,
     load_history,
     save_failed_run,
 )
-from termdoctor.matcher import find_rule
-from termdoctor.parser import parse_python_error
+from termdoctor.core.runner import run_shell_command
+from termdoctor.engines.registry import get_default_registry, get_language_detector
+from termdoctor.engines.python.environment import diagnose_python_project, get_python_environment
 from termdoctor.renderer import (
     console,
     render_command_output,
@@ -29,12 +24,11 @@ from termdoctor.renderer import (
     render_success,
 )
 from termdoctor.report import build_markdown_report, write_report
-from termdoctor.runner import run_shell_command
 
 
 app = typer.Typer(
     name="termdoctor",
-    help="Explain Python terminal errors and suggest practical fixes.",
+    help="Explain terminal errors and suggest practical fixes.",
     add_completion=False,
     no_args_is_help=True,
 )
@@ -102,15 +96,21 @@ def run_command(
     render_command_output(command_result)
 
     text_to_parse = command_result.stderr or command_result.stdout
-    parsed_error = parse_python_error(text_to_parse)
+    detector = get_language_detector()
+    engine = detector.detect_for_command(command_to_run, text_to_parse)
 
-    save_failed_run(command_result, parsed_error)
-
-    if parsed_error is None:
+    if engine is None:
         render_no_python_error_found(text_to_parse)
         raise typer.Exit(code=command_result.exit_code)
 
-    render_parsed_error(parsed_error, command_result=command_result)
+    diagnosis = engine.diagnose(text_to_parse, command_result=command_result)
+
+    if diagnosis is None:
+        render_no_python_error_found(text_to_parse)
+        raise typer.Exit(code=command_result.exit_code)
+
+    save_failed_run(command_result, diagnosis.parsed_error)
+    render_engine_diagnosis(diagnosis)
 
     raise typer.Exit(code=command_result.exit_code)
 
@@ -129,27 +129,25 @@ def build_command_input(command: str | None, extra_args: list[str]) -> str | lis
     return None
 
 
-def render_parsed_error(parsed_error, command_result=None) -> None:
-    rule = find_rule(parsed_error)
-    environment = get_python_environment()
-
-    module_context = None
-
-    if parsed_error.error_type == "ModuleNotFoundError":
-        module_name = parsed_error.extracted.get("module")
-
-        if module_name:
-            module_context = build_module_diagnosis_context(module_name)
-
-    framework_context = build_framework_diagnosis_context(parsed_error, environment.framework_info)
-
+def render_engine_diagnosis(diagnosis) -> None:
     render_diagnosis(
-        parsed_error,
-        rule,
-        command_result,
-        module_context=module_context,
-        framework_context=framework_context,
+        diagnosis.parsed_error,
+        diagnosis.rule,
+        diagnosis.command_result,
+        module_context=diagnosis.module_context,
+        framework_context=diagnosis.framework_context,
+        language_name=diagnosis.display_name,
     )
+
+
+@app.command("languages")
+def show_languages() -> None:
+    engines = get_default_registry()
+
+    console.print("[bold]Supported language engines[/bold]")
+
+    for engine in engines:
+        console.print(f"- {engine.display_name} ({engine.language})")
 
 
 @app.command("env")
@@ -168,43 +166,35 @@ def doctor_python() -> None:
 def explain_error(
     source: str = typer.Argument(
         "last",
-        help='Use "last" or provide a path to a file with a Python traceback.',
+        help='Use "last" or provide a path to a file with a traceback.',
+    ),
+    lang: str | None = typer.Option(
+        None,
+        "--lang",
+        help="Force a language engine. Example: --lang python",
     ),
 ) -> None:
-    text = ""
+    text = load_explain_text(source)
+    engine = get_engine_for_explain(text=text, lang=lang)
 
-    if source == "last":
-        last_item = get_last_history_item()
-
-        if not last_item:
-            console.print("[yellow]No history found.[/yellow]")
-            console.print('Run something first, for example: termdoctor run "python main.py"')
-            raise typer.Exit(code=1)
-
-        text = last_item.get("stderr") or last_item.get("stdout") or ""
-
-    else:
-        path = Path(source)
-
-        if path.exists() and path.is_file():
-            text = path.read_text(encoding="utf-8")
-        else:
-            text = source
-
-    parsed_error = parse_python_error(text)
-
-    if parsed_error is None:
+    if engine is None:
         render_no_python_error_found(text)
         raise typer.Exit(code=1)
 
-    render_parsed_error(parsed_error)
+    diagnosis = engine.diagnose(text)
+
+    if diagnosis is None:
+        render_no_python_error_found(text)
+        raise typer.Exit(code=1)
+
+    render_engine_diagnosis(diagnosis)
 
 
 @app.command("report")
 def create_report(
     source: str = typer.Argument(
         "last",
-        help='Use "last" or provide a path to a file with a Python traceback.',
+        help='Use "last" or provide a path to a file with a traceback.',
     ),
     output: str | None = typer.Option(
         None,
@@ -217,9 +207,14 @@ def create_report(
         "--show-raw/--no-raw",
         help="Include or exclude the raw traceback in the report.",
     ),
+    lang: str | None = typer.Option(
+        None,
+        "--lang",
+        help="Force a language engine. Example: --lang python",
+    ),
 ) -> None:
     try:
-        markdown = build_markdown_report(source=source, include_raw=show_raw)
+        markdown = build_markdown_report(source=source, include_raw=show_raw, lang=lang)
     except ValueError as exc:
         console.print(f"[red]Error:[/red] {exc}")
         raise typer.Exit(code=1)
@@ -233,20 +228,31 @@ def create_report(
 
 
 @app.command("paste")
-def paste_error() -> None:
-    console.print("[bold]Paste a Python traceback below.[/bold]")
+def paste_error(
+    lang: str | None = typer.Option(
+        None,
+        "--lang",
+        help="Force a language engine. Example: --lang python",
+    ),
+) -> None:
+    console.print("[bold]Paste a traceback below.[/bold]")
     console.print("Press Ctrl+D on Linux/macOS or Ctrl+Z then Enter on Windows when finished.")
     console.print()
 
     text = sys.stdin.read()
+    engine = get_engine_for_explain(text=text, lang=lang)
 
-    parsed_error = parse_python_error(text)
-
-    if parsed_error is None:
+    if engine is None:
         render_no_python_error_found(text)
         raise typer.Exit(code=1)
 
-    render_parsed_error(parsed_error)
+    diagnosis = engine.diagnose(text)
+
+    if diagnosis is None:
+        render_no_python_error_found(text)
+        raise typer.Exit(code=1)
+
+    render_engine_diagnosis(diagnosis)
 
 
 @app.command("history")
@@ -270,6 +276,34 @@ def show_history(
 def clear_saved_history() -> None:
     clear_history()
     console.print("[green]History cleared.[/green]")
+
+
+def load_explain_text(source: str) -> str:
+    if source == "last":
+        last_item = get_last_history_item()
+
+        if not last_item:
+            console.print("[yellow]No history found.[/yellow]")
+            console.print('Run something first, for example: termdoctor run "python main.py"')
+            raise typer.Exit(code=1)
+
+        return last_item.get("stderr") or last_item.get("stdout") or ""
+
+    path = Path(source)
+
+    if path.exists() and path.is_file():
+        return path.read_text(encoding="utf-8")
+
+    return source
+
+
+def get_engine_for_explain(text: str, lang: str | None = None):
+    if lang:
+        from termdoctor.engines.registry import get_engine_by_language
+
+        return get_engine_by_language(lang)
+
+    return get_language_detector().detect_for_text(text)
 
 
 def main() -> None:

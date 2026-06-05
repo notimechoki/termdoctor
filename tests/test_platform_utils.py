@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from termdoctor.platform_utils import get_activation_command
-
+from termdoctor.core.platform_utils import get_activation_command
 
 def test_get_activation_command_returns_none_without_venv():
     assert get_activation_command(None) is None

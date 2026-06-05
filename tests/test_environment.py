@@ -1,6 +1,6 @@
 import sys
 
-from termdoctor.environment import (
+from termdoctor.engines.python.environment import (
     build_module_diagnosis_context,
     diagnose_python_project,
     find_project_venv,

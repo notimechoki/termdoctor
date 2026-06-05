@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from termdoctor.frameworks import (
+from termdoctor.engines.python.frameworks import (
     build_framework_diagnosis_context,
     detect_framework_from_error,
     detect_frameworks,

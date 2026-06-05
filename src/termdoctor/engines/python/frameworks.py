@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from termdoctor.dependencies import dependency_exists
+from termdoctor.engines.python.dependencies import dependency_exists
 from termdoctor.models import FrameworkDetectionResult, FrameworkDiagnosisContext, FrameworkInfo, ParsedError
 
 

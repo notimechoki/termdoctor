@@ -2,12 +2,12 @@ import os
 import sys
 from pathlib import Path
 
-from termdoctor.dependencies import collect_dependency_info, dependency_exists
-from termdoctor.frameworks import detect_frameworks
+from termdoctor.engines.python.dependencies import collect_dependency_info, dependency_exists
+from termdoctor.engines.python.frameworks import detect_frameworks
+from termdoctor.engines.python.package_hints import get_install_name, get_package_hint
+from termdoctor.core.platform_utils import get_activation_command
+from termdoctor.core.project import find_project_root
 from termdoctor.models import ModuleDiagnosisContext, PythonDoctorResult, PythonEnvironment
-from termdoctor.package_hints import get_install_name, get_package_hint
-from termdoctor.platform_utils import get_activation_command
-from termdoctor.project import find_project_root
 
 
 def get_python_environment(cwd: Path | None = None) -> PythonEnvironment:

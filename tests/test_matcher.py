@@ -1,4 +1,4 @@
-from termdoctor.matcher import find_rule
+from termdoctor.engines.python.matcher import find_rule
 from termdoctor.models import ParsedError
 
 

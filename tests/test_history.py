@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from termdoctor import history
-from termdoctor.history import clear_history, load_history, save_failed_run
+from termdoctor.core import history
+from termdoctor.core.history import clear_history, load_history, save_failed_run
 from termdoctor.models import CommandResult, ParsedError
 
 

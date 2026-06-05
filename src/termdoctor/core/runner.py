@@ -6,13 +6,16 @@ from collections.abc import Sequence
 
 from termdoctor.models import CommandResult
 
+
 CommandInput = str | Sequence[str]
+
 
 def format_command(command: CommandInput) -> str:
     if isinstance(command, str):
         return command
-    
+
     return shlex.join(list(command))
+
 
 def run_shell_command(command: CommandInput) -> CommandResult:
     start_time = time.perf_counter()
@@ -40,14 +43,14 @@ def run_shell_command(command: CommandInput) -> CommandResult:
         duration = time.perf_counter() - start_time
 
         return CommandResult(
-            command=command,
+            command=command_display,
             cwd=cwd,
             exit_code=completed.returncode,
             stdout=completed.stdout or "",
             stderr=completed.stderr or "",
             duration_seconds=duration,
         )
-    
+
     except FileNotFoundError as exc:
         duration = time.perf_counter() - start_time
 
@@ -59,7 +62,7 @@ def run_shell_command(command: CommandInput) -> CommandResult:
             stderr=f"FileNotFoundError: {exc}",
             duration_seconds=duration,
         )
-    
+
     except Exception as exc:
         duration = time.perf_counter() - start_time
 

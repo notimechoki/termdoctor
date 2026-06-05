@@ -1,4 +1,4 @@
-from termdoctor.dependencies import (
+from termdoctor.engines.python.dependencies import (
     collect_dependency_info,
     dependency_exists,
     normalize_package_name,
@@ -7,7 +7,7 @@ from termdoctor.dependencies import (
     parse_requirement_name,
     parse_requirements_txt,
 )
-from termdoctor.package_hints import get_install_name, get_package_hint
+from termdoctor.engines.python.package_hints import get_install_name, get_package_hint
 
 
 def test_normalize_package_name():

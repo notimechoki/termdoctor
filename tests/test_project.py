@@ -1,4 +1,4 @@
-from termdoctor.project import find_project_root, has_project_marker
+from termdoctor.core.project import find_project_root, has_project_marker
 
 
 def test_has_project_marker_with_pyproject(tmp_path):

@@ -1,63 +1,52 @@
 # Changelog
 
+## 0.3.0 - Language Engine Architecture
+
+### Added
+
+- Added language engine architecture.
+- Added `BaseEngine` abstraction.
+- Added `EngineDiagnosis` model.
+- Added `PythonEngine`.
+- Added `LanguageDetector`.
+- Added default engine registry.
+- Added language-specific Python rules at `src/termdoctor/engines/python/rules.yml`.
+- Added `termdoctor languages` command.
+- Added `--lang python` option for `explain`, `paste`, and `report`.
+- Added engine tests.
+- Added CLI tests for language engine commands.
+
+### Changed
+
+- Moved Python rule loading into `PythonEngine`.
+- Updated CLI diagnosis flow to use language detection.
+- Updated Markdown reports to use engine diagnosis.
+- Updated `matcher.py` and `rules_loader.py` as compatibility wrappers around `PythonEngine`.
+- Updated package data to include language-specific rules.
+- Updated README for engine-based architecture.
+
+### Removed
+
+- Removed old global `src/termdoctor/rules/python_errors.yml` rule location.
+
 ## 0.2.3 - Python Framework Diagnosis
 
 ### Added
 
-- Added framework detection for Python projects.
-- Added framework context in terminal diagnosis output.
-- Added detected frameworks to `termdoctor env`.
-- Added framework-aware suggestions to `termdoctor doctor python`.
-- Added framework context to generated Markdown reports.
-- Added support for common Django traceback patterns:
-  - `ImproperlyConfigured`
-  - `NoReverseMatch`
-  - `TemplateDoesNotExist`
-  - common `django.db.utils.*` errors
-- Added support for common FastAPI and Pydantic traceback patterns:
-  - `ResponseValidationError`
-  - `RequestValidationError`
-  - `ValidationError`
-- Added support for common Flask/Jinja/Werkzeug traceback patterns:
-  - `BuildError`
-  - `TemplateNotFound`
-- Added support for common SQLAlchemy traceback patterns:
-  - `OperationalError`
-  - `IntegrityError`
-  - `ProgrammingError`
-  - `PendingRollbackError`
-- Added support for common Alembic migration errors.
-- Added support for common pytest fixture and assertion errors.
-- Added support for common aiogram Telegram API errors.
-- Added support for common pyTelegramBotAPI Telegram API errors.
-- Added example traceback files for supported frameworks.
-- Added framework detection tests.
-- Added parser and matcher tests for framework errors.
-
-### Improved
-
-- Improved traceback parser for framework exceptions that do not end with `Error`.
-- Improved matcher so `match` rules are searched across message, raw traceback, and full dotted error type.
-- Improved Python environment output with detected frameworks.
-- Improved project doctor output with framework-specific suggestions.
-- Improved report generation with framework context.
-
-### Changed
-
-- Bumped version to `0.2.3`.
+- Added framework detection for Django, FastAPI, Flask, Pydantic, SQLAlchemy, Alembic, pytest, aiogram, and pyTelegramBotAPI.
+- Added framework-aware diagnosis context.
+- Added framework-specific Python rules.
+- Added framework traceback examples.
+- Added framework tests.
 
 ## 0.2.2 - Reports & Better Python Diagnosis
 
 ### Added
 
-- Added `termdoctor report`.
 - Added Markdown report generation.
-- Added report generation from last error.
-- Added report generation from traceback files.
-- Added `--output` support for reports.
-- Added `--show-raw/--no-raw` support.
-- Added more Python standard error rules.
-- Added more examples and tests.
+- Added `termdoctor report` command.
+- Added more Python error rules.
+- Added more report tests and examples.
 
 ## 0.2.1 - Environment Polish
 
@@ -65,9 +54,8 @@
 
 - Added project root detection.
 - Added OS-aware virtual environment activation hints.
-- Added nested requirements parsing with `-r` and `--requirement`.
+- Added nested requirements parsing.
 - Added more package hints.
-- Added more CLI tests.
 
 ## 0.2.0 - Python Environment Awareness
 
@@ -75,22 +63,15 @@
 
 - Added `termdoctor env`.
 - Added `termdoctor doctor python`.
-- Added Python environment detection.
-- Added dependency file detection.
-- Added smarter `ModuleNotFoundError` suggestions.
+- Added Python environment and dependency awareness.
+- Added smarter `ModuleNotFoundError` diagnosis.
 
 ## 0.1.1 - Stability Patch
 
 ### Added
 
 - Added safer command execution format with `termdoctor run -- ...`.
-- Added more Python error examples and tests.
-
-### Improved
-
-- Improved command parsing.
-- Improved traceback parsing.
-- Improved history table output.
+- Improved traceback parsing and history output.
 
 ## 0.1.0 - Initial Release
 

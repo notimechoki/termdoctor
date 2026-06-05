@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 PROJECT_ROOT_MARKERS = {
     "pyproject.toml",
     "requirements.txt",
@@ -8,6 +9,7 @@ PROJECT_ROOT_MARKERS = {
     "setup.cfg",
     "manage.py",
 }
+
 
 def find_project_root(start: Path | None = None) -> Path:
     current = (start or Path.cwd()).resolve()

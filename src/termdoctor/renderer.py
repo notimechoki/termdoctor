@@ -2,7 +2,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from termdoctor.history import format_history_time, trim_text
+from termdoctor.core.history import format_history_time, trim_text
 from termdoctor.models import (
     CommandResult,
     ErrorRule,
@@ -48,13 +48,14 @@ def render_diagnosis(
     command_result: CommandResult | None = None,
     module_context: ModuleDiagnosisContext | None = None,
     framework_context: FrameworkDiagnosisContext | None = None,
+    language_name: str = "Python",
 ) -> None:
     console.print()
 
     console.print(
         Panel(
             build_error_summary(parsed_error=parsed_error, command_result=command_result),
-            title=f"[bold red]Python error detected: {parsed_error.error_type}[/bold red]",
+            title=f"[bold red]{language_name} error detected: {parsed_error.error_type}[/bold red]",
             border_style="red",
         )
     )
@@ -345,7 +346,7 @@ def render_no_python_error_found(text: str) -> None:
     console.print(
         Panel(
             "TermDoctor could not detect a Python traceback or a known Python error line.\n\n"
-            "For version 0.2.3, TermDoctor works best with standard Python errors and supported Python framework tracebacks.",
+            "For version 0.3.0, TermDoctor works best with registered language engines. Currently the stable engine is Python.",
             title="No Python error detected",
             border_style="yellow",
         )

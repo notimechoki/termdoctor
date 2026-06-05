@@ -17,6 +17,7 @@ class ParsedError:
     error_type: str
     message: str
     raw_text: str
+    language: str = "python"
     file_path: str | None = None
     line_number: int | None = None
     extracted: dict[str, str] = field(default_factory=dict)
