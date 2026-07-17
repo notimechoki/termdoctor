@@ -1,18 +1,29 @@
-from pathlib import Path
+from __future__ import annotations
+
 import sys
+from pathlib import Path
 
 import typer
 
 from termdoctor import __version__
 from termdoctor.core.history import (
     clear_history,
+    get_history_text,
     get_last_history_item,
     load_history,
     save_failed_run,
 )
 from termdoctor.core.runner import run_shell_command
-from termdoctor.engines.registry import get_default_registry, get_language_detector
+from termdoctor.engines.registry import get_default_registry, get_engine_by_language, get_language_detector
 from termdoctor.engines.python.environment import diagnose_python_project, get_python_environment
+from termdoctor.i18n import (
+    SUPPORTED_LOCALES,
+    get_locale,
+    resolve_locale,
+    set_locale,
+    set_saved_locale,
+    tr,
+)
 from termdoctor.renderer import (
     console,
     render_command_output,
@@ -28,19 +39,14 @@ from termdoctor.report import build_markdown_report, write_report
 
 app = typer.Typer(
     name="termdoctor",
-    help="Explain terminal errors and suggest practical fixes.",
+    help="Explain Python terminal errors and suggest practical fixes.",
     add_completion=False,
     no_args_is_help=True,
 )
-
-doctor_app = typer.Typer(
-    name="doctor",
-    help="Run project-level diagnostics.",
-    add_completion=False,
-    no_args_is_help=True,
-)
-
+doctor_app = typer.Typer(name="doctor", help="Run project-level diagnostics.", add_completion=False, no_args_is_help=True)
+config_app = typer.Typer(name="config", help="View or change TermDoctor settings.", add_completion=False, no_args_is_help=True)
 app.add_typer(doctor_app, name="doctor")
+app.add_typer(config_app, name="config")
 
 
 def version_callback(value: bool) -> None:
@@ -51,82 +57,84 @@ def version_callback(value: bool) -> None:
 
 @app.callback()
 def callback(
+    lang: str | None = typer.Option(
+        None,
+        "--lang",
+        help="Interface language: en or ru. Aliases such as eng and rus are accepted.",
+    ),
     version: bool = typer.Option(
         False,
         "--version",
         help="Show TermDoctor version.",
         callback=version_callback,
         is_eager=True,
-    )
+    ),
 ) -> None:
-    pass
+    try:
+        set_locale(lang)
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=2)
 
 
 @app.command(
     "run",
-    context_settings={
-        "allow_extra_args": True,
-        "ignore_unknown_options": True,
-    },
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
 def run_command(
     ctx: typer.Context,
     command: str | None = typer.Argument(
         None,
-        help=(
-            "Command to run. Examples: "
-            'termdoctor run "python main.py" or termdoctor run -- python main.py'
-        ),
+        help='Command to run, for example "python main.py".',
+    ),
+    no_history: bool = typer.Option(
+        False,
+        "--no-history",
+        help="Do not save this failed command or its output to TermDoctor history.",
     ),
 ) -> None:
-    command_to_run = build_command_input(command=command, extra_args=list(ctx.args))
-
+    command_to_run = build_command_input(command, list(ctx.args))
     if command_to_run is None:
-        console.print("[red]Error:[/red] Please provide a command.")
-        console.print('Example 1: termdoctor run "python main.py"')
-        console.print("Example 2: termdoctor run -- python main.py")
+        console.print(f"[red]{tr('common.error')}:[/red] {tr('run.missing_command')}")
+        console.print(tr("run.example_1"))
+        console.print(tr("run.example_2"))
         raise typer.Exit(code=1)
 
     command_result = run_shell_command(command_to_run)
-
     if command_result.exit_code == 0:
         render_success(command_result)
         raise typer.Exit(code=0)
 
     render_command_output(command_result)
-
-    text_to_parse = command_result.stderr or command_result.stdout
-    detector = get_language_detector()
-    engine = detector.detect_for_command(command_to_run, text_to_parse)
-
+    text_to_parse = command_result.diagnostic_text
+    engine = get_language_detector().detect_for_command(command_to_run, text_to_parse)
     if engine is None:
         render_no_python_error_found(text_to_parse)
         raise typer.Exit(code=command_result.exit_code)
 
-    diagnosis = engine.diagnose(text_to_parse, command_result=command_result)
-
+    diagnosis = engine.diagnose(
+        text_to_parse,
+        command_result=command_result,
+        cwd=Path(command_result.cwd),
+        locale=get_locale(),
+    )
     if diagnosis is None:
         render_no_python_error_found(text_to_parse)
         raise typer.Exit(code=command_result.exit_code)
 
-    save_failed_run(command_result, diagnosis.parsed_error)
+    if not no_history:
+        save_failed_run(command_result, diagnosis.parsed_error)
     render_engine_diagnosis(diagnosis)
-
     raise typer.Exit(code=command_result.exit_code)
 
 
 def build_command_input(command: str | None, extra_args: list[str]) -> str | list[str] | None:
     if command and extra_args:
         return [command, *extra_args]
-
     if command:
-        stripped_command = command.strip()
-        return stripped_command if stripped_command else None
-
-    if extra_args:
-        return extra_args
-
-    return None
+        stripped = command.strip()
+        return stripped if stripped else None
+    return extra_args or None
 
 
 def render_engine_diagnosis(diagnosis) -> None:
@@ -134,176 +142,150 @@ def render_engine_diagnosis(diagnosis) -> None:
         diagnosis.parsed_error,
         diagnosis.rule,
         diagnosis.command_result,
-        module_context=diagnosis.module_context,
-        framework_context=diagnosis.framework_context,
+        sections=diagnosis.sections,
         language_name=diagnosis.display_name,
     )
 
 
 @app.command("languages")
 def show_languages() -> None:
-    engines = get_default_registry()
-
-    console.print("[bold]Supported language engines[/bold]")
-
-    for engine in engines:
+    console.print(f"[bold]{tr('languages.title')}[/bold]")
+    for code, name in SUPPORTED_LOCALES.items():
+        console.print(f"- {name} ({code})")
+    console.print()
+    console.print(f"[bold]{tr('languages.engines_title')}[/bold]")
+    for engine in get_default_registry():
         console.print(f"- {engine.display_name} ({engine.language})")
 
 
 @app.command("env")
 def show_environment() -> None:
-    environment = get_python_environment()
-    render_python_environment(environment)
+    render_python_environment(get_python_environment())
 
 
 @doctor_app.command("python")
 def doctor_python() -> None:
-    result = diagnose_python_project()
-    render_python_doctor(result)
+    render_python_doctor(diagnose_python_project())
 
 
 @app.command("explain")
 def explain_error(
-    source: str = typer.Argument(
-        "last",
-        help='Use "last" or provide a path to a file with a traceback.',
-    ),
-    lang: str | None = typer.Option(
-        None,
-        "--lang",
-        help="Force a language engine. Example: --lang python",
-    ),
+    source: str = typer.Argument("last", help='Use "last" or provide a traceback file/path.'),
+    engine: str | None = typer.Option(None, "--engine", "--lang", help="Force a programming-language engine, for example python."),
 ) -> None:
-    text = load_explain_text(source)
-    engine = get_engine_for_explain(text=text, lang=lang)
-
-    if engine is None:
-        render_no_python_error_found(text)
+    text, cwd = load_explain_source(source)
+    selected = get_engine_for_explain(text, engine_name=engine)
+    if selected is None:
+        if engine:
+            console.print(f"[red]{tr('errors.unsupported_engine', engine=engine)}[/red]")
+        else:
+            render_no_python_error_found(text)
         raise typer.Exit(code=1)
-
-    diagnosis = engine.diagnose(text)
-
+    diagnosis = selected.diagnose(text, cwd=cwd, locale=get_locale())
     if diagnosis is None:
         render_no_python_error_found(text)
         raise typer.Exit(code=1)
-
     render_engine_diagnosis(diagnosis)
 
 
 @app.command("report")
 def create_report(
-    source: str = typer.Argument(
-        "last",
-        help='Use "last" or provide a path to a file with a traceback.',
-    ),
-    output: str | None = typer.Option(
-        None,
-        "--output",
-        "-o",
-        help="Write the Markdown report to a file.",
-    ),
-    show_raw: bool = typer.Option(
-        True,
-        "--show-raw/--no-raw",
-        help="Include or exclude the raw traceback in the report.",
-    ),
-    lang: str | None = typer.Option(
-        None,
-        "--lang",
-        help="Force a language engine. Example: --lang python",
-    ),
+    source: str = typer.Argument("last", help='Use "last" or provide a traceback file/path.'),
+    output: str | None = typer.Option(None, "--output", "-o", help="Write the Markdown report to a file."),
+    show_raw: bool = typer.Option(True, "--show-raw/--no-raw", help="Include or exclude the raw traceback."),
+    engine: str | None = typer.Option(None, "--engine", "--lang", help="Force a programming-language engine, for example python."),
 ) -> None:
     try:
-        markdown = build_markdown_report(source=source, include_raw=show_raw, lang=lang)
+        markdown = build_markdown_report(source, include_raw=show_raw, engine_name=engine)
     except ValueError as exc:
-        console.print(f"[red]Error:[/red] {exc}")
+        console.print(f"[red]{tr('common.error')}:[/red] {exc}")
         raise typer.Exit(code=1)
-
     if output:
         path = write_report(markdown, output)
-        console.print(f"[green]Report written to:[/green] {path}")
+        console.print(f"[green]{tr('report.written', path=path)}[/green]")
         raise typer.Exit(code=0)
-
     console.print(markdown)
 
 
 @app.command("paste")
 def paste_error(
-    lang: str | None = typer.Option(
-        None,
-        "--lang",
-        help="Force a language engine. Example: --lang python",
-    ),
+    engine: str | None = typer.Option(None, "--engine", "--lang", help="Force a programming-language engine, for example python."),
 ) -> None:
-    console.print("[bold]Paste a traceback below.[/bold]")
-    console.print("Press Ctrl+D on Linux/macOS or Ctrl+Z then Enter on Windows when finished.")
+    console.print(f"[bold]{tr('paste.title')}[/bold]")
+    console.print(tr("paste.finish"))
     console.print()
-
     text = sys.stdin.read()
-    engine = get_engine_for_explain(text=text, lang=lang)
-
-    if engine is None:
+    selected = get_engine_for_explain(text, engine_name=engine)
+    if selected is None:
         render_no_python_error_found(text)
         raise typer.Exit(code=1)
-
-    diagnosis = engine.diagnose(text)
-
+    diagnosis = selected.diagnose(text, locale=get_locale())
     if diagnosis is None:
         render_no_python_error_found(text)
         raise typer.Exit(code=1)
-
     render_engine_diagnosis(diagnosis)
 
 
 @app.command("history")
 def show_history(
-    limit: int = typer.Option(
-        10,
-        "--limit",
-        "-l",
-        help="Number of history items to show.",
-    )
+    limit: int = typer.Option(10, "--limit", "-l", help="Number of history items to show."),
 ) -> None:
     items = load_history()
-
     if limit > 0:
         items = items[-limit:]
-
     render_history(items)
 
 
 @app.command("clear")
 def clear_saved_history() -> None:
     clear_history()
-    console.print("[green]History cleared.[/green]")
+    console.print(f"[green]{tr('history.cleared')}[/green]")
+
+
+@config_app.command("language")
+def config_language(
+    value: str | None = typer.Argument(None, help="Language to save as default: en or ru."),
+) -> None:
+    if value is None:
+        locale = resolve_locale()
+        console.print(tr("config.current", language=f"{SUPPORTED_LOCALES[locale]} ({locale})"))
+        return
+    try:
+        locale = set_saved_locale(value)
+        set_locale(locale)
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=2)
+    console.print(tr("config.saved", language=f"{SUPPORTED_LOCALES[locale]} ({locale})"))
+
+
+def load_explain_source(source: str) -> tuple[str, Path | None]:
+    if source == "last":
+        last_item = get_last_history_item()
+        if not last_item:
+            console.print(f"[yellow]{tr('history.no_history')}[/yellow]")
+            console.print(tr("history.run_first"))
+            raise typer.Exit(code=1)
+        cwd_value = last_item.get("cwd")
+        return get_history_text(last_item), Path(cwd_value) if cwd_value else None
+
+    path = Path(source)
+    if path.exists() and path.is_file():
+        return path.read_text(encoding="utf-8"), path.resolve().parent
+    return source, None
 
 
 def load_explain_text(source: str) -> str:
-    if source == "last":
-        last_item = get_last_history_item()
-
-        if not last_item:
-            console.print("[yellow]No history found.[/yellow]")
-            console.print('Run something first, for example: termdoctor run "python main.py"')
-            raise typer.Exit(code=1)
-
-        return last_item.get("stderr") or last_item.get("stdout") or ""
-
-    path = Path(source)
-
-    if path.exists() and path.is_file():
-        return path.read_text(encoding="utf-8")
-
-    return source
+    return load_explain_source(source)[0]
 
 
-def get_engine_for_explain(text: str, lang: str | None = None):
-    if lang:
-        from termdoctor.engines.registry import get_engine_by_language
-
-        return get_engine_by_language(lang)
-
-    return get_language_detector().detect_for_text(text)
+def get_engine_for_explain(
+    text: str,
+    engine_name: str | None = None,
+    lang: str | None = None,
+):
+    requested = engine_name or lang
+    return get_engine_by_language(requested) if requested else get_language_detector().detect_for_text(text)
 
 
 def main() -> None:

@@ -1,1393 +1,1625 @@
 - id: syntax_error
   error: SyntaxError
-  title: "Invalid Python syntax"
-  explanation: "Python could not understand the code structure. This usually means there is a typo or a missing symbol near the reported line."
+  title: Invalid Python syntax
+  explanation: Python could not understand the code structure. This usually means there is a typo or a missing symbol
+    near the reported line.
   causes:
-    - "Missing colon after if, for, while, def, class, try, except, or else."
-    - "Unclosed parentheses, brackets, braces, or quotes."
-    - "Invalid operator or misplaced character."
+  - Missing colon after if, for, while, def, class, try, except, or else.
+  - Unclosed parentheses, brackets, braces, or quotes.
+  - Invalid operator or misplaced character.
   fixes:
-    - "Check the reported file and line: {file_path}:{line_number}."
-    - "Look at the line above the reported line too. Syntax errors are often caused by the previous line."
-    - "Check missing colons, quotes, parentheses, and brackets."
+  - 'Check the reported file and line: {file_path}:{line_number}.'
+  - Look at the line above the reported line too. Syntax errors are often caused by the previous line.
+  - Check missing colons, quotes, parentheses, and brackets.
   examples:
-    - "if user == 'admin':"
-    - "print('Hello')"
-
+  - 'if user == ''admin'':'
+  - print('Hello')
 - id: indentation_error
   error: IndentationError
-  title: "Incorrect indentation"
-  explanation: "Python uses indentation to understand code blocks. This error means the indentation level is not valid."
+  title: Incorrect indentation
+  explanation: Python uses indentation to understand code blocks. This error means the indentation level is not
+    valid.
   causes:
-    - "A line is indented too much or too little."
-    - "Tabs and spaces are mixed in the same file."
-    - "Code inside if, for, while, def, or class is not indented correctly."
+  - A line is indented too much or too little.
+  - Tabs and spaces are mixed in the same file.
+  - Code inside if, for, while, def, or class is not indented correctly.
   fixes:
-    - "Use 4 spaces per indentation level."
-    - "Do not mix tabs and spaces."
-    - "Check the block around {file_path}:{line_number}."
-
+  - Use 4 spaces per indentation level.
+  - Do not mix tabs and spaces.
+  - Check the block around {file_path}:{line_number}.
 - id: module_not_found
   error: ModuleNotFoundError
-  title: "Python cannot find a module"
-  explanation: "Python tried to import `{module}`, but it is not available in the current environment."
+  title: Python cannot find a module
+  explanation: Python tried to import `{module}`, but it is not available in the current environment.
   causes:
-    - "The package is not installed in the Python environment used to run this command."
-    - "The virtual environment is not activated."
-    - "You are using a different Python interpreter."
-    - "The import name may be different from the package name used for installation."
+  - The package is not installed in the Python environment used to run this command.
+  - The virtual environment is not activated.
+  - You are using a different Python interpreter.
+  - The import name may be different from the package name used for installation.
   fixes:
-    - "Check the environment context shown by TermDoctor."
-    - "Activate your project virtual environment if one exists."
-    - "Install project dependencies from requirements.txt or pyproject.toml if they are available."
-    - "If TermDoctor shows a package hint, install that package name instead of the import name."
-
+  - Check the environment context shown by TermDoctor.
+  - Activate your project virtual environment if one exists.
+  - Install project dependencies from requirements.txt or pyproject.toml if they are available.
+  - If TermDoctor shows a package hint, install that package name instead of the import name.
+- id: import_error_circular
+  error: ImportError
+  title: A circular import prevented initialization
+  explanation: Two or more modules import each other before their definitions are fully created.
+  causes:
+  - module_a imports module_b while module_b imports module_a.
+  - A project module has the same name as an installed package.
+  - Shared objects are placed in modules that depend on each other.
+  fixes:
+  - Move shared constants, models, or interfaces into a separate module.
+  - Import inside a function only as a temporary way to break the cycle.
+  - Rename local files that shadow third-party or standard-library modules.
+  match_any:
+  - partially initialized module
+  - circular import
+  priority: 20
 - id: import_error
   error: ImportError
-  title: "Import failed"
-  explanation: "Python found the module, but could not import the requested object from it."
+  title: Import failed
+  explanation: Python found the module, but could not import the requested object from it.
   causes:
-    - "The imported name does not exist in that module."
-    - "There is a circular import."
-    - "The installed package version does not contain this object."
+  - The imported name does not exist in that module.
+  - There is a circular import.
+  - The installed package version does not contain this object.
   fixes:
-    - "Check the spelling of `{name}`."
-    - "Open the module and verify that `{name}` is defined there."
-    - "Check for circular imports between files."
-    - "Check the installed package version."
-
+  - Check the spelling of `{name}`.
+  - Open the module and verify that `{name}` is defined there.
+  - Check for circular imports between files.
+  - Check the installed package version.
 - id: name_error
   error: NameError
-  title: "A name is used before it exists"
-  explanation: "Python found a variable, function, or class name that was not defined."
+  title: A name is used before it exists
+  explanation: Python found a variable, function, or class name that was not defined.
   causes:
-    - "There is a typo in the name."
-    - "The variable is used before assignment."
-    - "The function or class was not imported."
-    - "The name exists only inside another scope."
+  - There is a typo in the name.
+  - The variable is used before assignment.
+  - The function or class was not imported.
+  - The name exists only inside another scope.
   fixes:
-    - "Check the spelling of `{name}`."
-    - "Make sure `{name}` is created before this line."
-    - "Check imports."
-    - "Check whether `{name}` is defined inside a function or block and unavailable here."
-
+  - Check the spelling of `{name}`.
+  - Make sure `{name}` is created before this line.
+  - Check imports.
+  - Check whether `{name}` is defined inside a function or block and unavailable here.
+- id: type_error_missing_argument
+  error: TypeError
+  title: A required function argument is missing
+  explanation: A function or method was called without one or more required arguments. The error message names the
+    missing argument or reports how many positional arguments are required.
+  causes:
+  - A required positional argument was omitted.
+  - A method was called on the class instead of an instance, or vice versa.
+  - A callback signature does not match what the framework expects.
+  fixes:
+  - Compare the call with the function definition and pass every required argument.
+  - Check whether the first parameter should be self or cls.
+  - Read the exact argument name in the error message and update the call site.
+  match_any:
+  - missing required positional argument
+  - required positional arguments
+  priority: 20
+- id: type_error_unexpected_keyword
+  error: TypeError
+  title: An unexpected keyword argument was passed
+  explanation: The function was called with a named argument that is not present in its current signature.
+  causes:
+  - The keyword is misspelled.
+  - The installed library version uses another parameter name.
+  - A wrapper forwards an unsupported keyword argument.
+  fixes:
+  - Open the function signature and use one of its supported parameter names.
+  - Check the installed package version and its documentation.
+  - Remove or rename the unsupported keyword argument.
+  match_any:
+  - unexpected keyword argument
+  priority: 20
+- id: type_error_not_callable
+  error: TypeError
+  title: A non-callable object was called
+  explanation: Code used parentheses as if a value were a function, but the value cannot be called.
+  causes:
+  - A function name was overwritten by a string, number, list, or other value.
+  - Parentheses were used where indexing or attribute access was intended.
+  - A property was treated as a method.
+  fixes:
+  - Print type(value) immediately before the failing call.
+  - Check whether a function name was reassigned earlier.
+  - Remove the parentheses if the value is a property, or call the correct method.
+  match_any:
+  - object is not callable
+  priority: 20
+- id: type_error_not_subscriptable
+  error: TypeError
+  title: This object cannot be indexed
+  explanation: Code used square brackets on a value that does not support indexing or key access.
+  causes:
+  - The value is None instead of a list or dictionary.
+  - A function or method was indexed instead of being called.
+  - The object type does not implement subscription.
+  fixes:
+  - Print the value and type(value) before the failing line.
+  - Check whether parentheses () should be used before square brackets [].
+  - Validate that the value is not None and has the expected collection type.
+  match_any:
+  - object is not subscriptable
+  priority: 20
+- id: type_error_not_iterable
+  error: TypeError
+  title: This object is not iterable
+  explanation: Python expected a value that can be looped over or unpacked, but received a non-iterable object.
+  causes:
+  - A loop received None, an integer, or another scalar value.
+  - A function returned one value instead of a collection.
+  - The code tries to unpack an object that cannot be iterated.
+  fixes:
+  - Print type(value) and verify the function return value.
+  - Return a list, tuple, generator, or other iterable where appropriate.
+  - Handle None separately before starting the loop or unpacking.
+  match_any:
+  - object is not iterable
+  - cannot unpack non-iterable
+  priority: 20
+- id: type_error_unsupported_operand
+  error: TypeError
+  title: The operand types are incompatible
+  explanation: An operator was used with values whose types cannot be combined by that operation.
+  causes:
+  - A string and a number are combined without conversion.
+  - One operand is None.
+  - A custom class does not implement the requested operator.
+  fixes:
+  - Inspect both operands with type(left) and type(right).
+  - Convert values explicitly before the operation.
+  - Validate optional values so None does not reach the calculation.
+  match_any:
+  - unsupported operand type
+  - can only concatenate
+  priority: 20
+- id: type_error_multiple_values
+  error: TypeError
+  title: An argument received multiple values
+  explanation: The same function argument was supplied more than once, usually both positionally and by keyword.
+  causes:
+  - A positional argument already filled the parameter that was also passed by name.
+  - A dictionary expanded with **kwargs contains a duplicate key.
+  - A wrapper adds an argument that the caller already supplied.
+  fixes:
+  - Pass the argument only once.
+  - Inspect **kwargs before forwarding it.
+  - Compare the positional argument order with the function signature.
+  match_any:
+  - got multiple values for argument
+  priority: 20
 - id: type_error
   error: TypeError
-  title: "Wrong value type or invalid operation"
-  explanation: "Python received a value of the wrong type, or an operation was used with incompatible types."
+  title: Wrong value type or invalid operation
+  explanation: Python received a value of the wrong type, or an operation was used with incompatible types.
   causes:
-    - "A function received an argument of the wrong type."
-    - "You tried to combine incompatible values, like string + integer."
-    - "You called something that is not callable."
-    - "A required argument is missing."
+  - A function received an argument of the wrong type.
+  - You tried to combine incompatible values, like string + integer.
+  - You called something that is not callable.
+  - A required argument is missing.
   fixes:
-    - "Read the full error message carefully. TypeError usually describes exactly what type was expected."
-    - "Print the type of the value with type(value)."
-    - "Check function arguments."
-    - "Convert values before using them, for example int(value) or str(value)."
-
+  - Read the full error message carefully. TypeError usually describes exactly what type was expected.
+  - Print the type of the value with type(value).
+  - Check function arguments.
+  - Convert values before using them, for example int(value) or str(value).
+- id: value_error_invalid_literal
+  error: ValueError
+  title: A string cannot be converted to the requested number
+  explanation: Python tried to convert text to a numeric type, but the text does not match the required format.
+  causes:
+  - The input contains letters, spaces, or punctuation.
+  - The numeric base does not match the supplied text.
+  - An empty string was passed to int() or float().
+  fixes:
+  - Print or log repr(value) before converting it.
+  - Strip surrounding whitespace and validate the format.
+  - Handle invalid user input with try/except ValueError.
+  match_any:
+  - invalid literal for int
+  - could not convert string to float
+  priority: 20
 - id: value_error
   error: ValueError
-  title: "Correct type, invalid value"
-  explanation: "Python received a value of the correct type, but the value itself is not acceptable."
+  title: Correct type, invalid value
+  explanation: Python received a value of the correct type, but the value itself is not acceptable.
   causes:
-    - "A string cannot be converted to a number."
-    - "A function received a value outside the allowed range."
-    - "Data format is invalid."
+  - A string cannot be converted to a number.
+  - A function received a value outside the allowed range.
+  - Data format is invalid.
   fixes:
-    - "Check the value that caused the error."
-    - "Validate user input before converting it."
-    - "Add error handling with try/except if the value can be invalid."
-
+  - Check the value that caused the error.
+  - Validate user input before converting it.
+  - Add error handling with try/except if the value can be invalid.
+- id: attribute_error_none
+  error: AttributeError
+  title: A value is None instead of the expected object
+  explanation: Code tried to access an attribute on None. This usually means an earlier lookup or function call
+    did not return an object.
+  causes:
+  - A function returned None implicitly.
+  - A database or collection lookup found no result.
+  - An optional value was used without checking it.
+  fixes:
+  - Trace where the value is assigned and inspect the return value.
+  - Check for None before accessing the attribute.
+  - Raise a clearer error or provide a fallback when the object is missing.
+  match_any:
+  - '''NoneType'' object has no attribute'
+  - NoneType object has no attribute
+  priority: 20
 - id: attribute_error
   error: AttributeError
-  title: "Object does not have this attribute"
-  explanation: "Python tried to access attribute `{attribute}`, but this object does not have it."
+  title: Object does not have this attribute
+  explanation: Python tried to access attribute `{attribute}`, but this object does not have it.
   causes:
-    - "The object is not the type you expected."
-    - "There is a typo in the attribute or method name."
-    - "The value is None."
+  - The object is not the type you expected.
+  - There is a typo in the attribute or method name.
+  - The value is None.
   fixes:
-    - "Print the object type with type(value)."
-    - "Check the spelling of `{attribute}`."
-    - "Check whether the object is None before accessing attributes."
-    - "Use dir(value) to inspect available attributes."
-
+  - Print the object type with type(value).
+  - Check the spelling of `{attribute}`.
+  - Check whether the object is None before accessing attributes.
+  - Use dir(value) to inspect available attributes.
 - id: key_error
   error: KeyError
-  title: "Dictionary key does not exist"
-  explanation: "Python tried to read key `{key}` from a dictionary, but that key does not exist."
+  title: Dictionary key does not exist
+  explanation: Python tried to read key `{key}` from a dictionary, but that key does not exist.
   causes:
-    - "The key name is misspelled."
-    - "The dictionary has a different structure than expected."
-    - "The key is optional and may be missing."
+  - The key name is misspelled.
+  - The dictionary has a different structure than expected.
+  - The key is optional and may be missing.
   fixes:
-    - "Check the dictionary content before accessing `{key}`."
-    - "Use dict.get('{key}') if the key may be optional."
-    - "Check API response or JSON structure."
-    - "Print dictionary keys with data.keys()."
-
+  - Check the dictionary content before accessing `{key}`.
+  - Use dict.get('{key}') if the key may be optional.
+  - Check API response or JSON structure.
+  - Print dictionary keys with data.keys().
 - id: index_error
   error: IndexError
-  title: "List index is out of range"
-  explanation: "Python tried to access an item by index, but the list, tuple, or string does not have an item at that position."
+  title: List index is out of range
+  explanation: Python tried to access an item by index, but the list, tuple, or string does not have an item at
+    that position.
   causes:
-    - "The list is empty."
-    - "The index is too large."
-    - "The loop goes beyond the collection length."
+  - The list is empty.
+  - The index is too large.
+  - The loop goes beyond the collection length.
   fixes:
-    - "Check len(value) before accessing by index."
-    - "Remember that Python indexes start from 0."
-    - "Use a for item in items loop when possible."
-
+  - Check len(value) before accessing by index.
+  - Remember that Python indexes start from 0.
+  - Use a for item in items loop when possible.
 - id: file_not_found
   error: FileNotFoundError
-  title: "File or directory was not found"
-  explanation: "Python tried to open `{path}`, but this file or directory does not exist."
+  title: File or directory was not found
+  explanation: Python tried to open `{path}`, but this file or directory does not exist.
   causes:
-    - "The path is incorrect."
-    - "The file is in another directory."
-    - "The current working directory is different from what you expect."
+  - The path is incorrect.
+  - The file is in another directory.
+  - The current working directory is different from what you expect.
   fixes:
-    - "Check the path: {path}."
-    - "Print the current directory with import os; print(os.getcwd())."
-    - "Use an absolute path or build paths with pathlib.Path."
-    - "Make sure the file exists before opening it."
-
+  - 'Check the path: {path}.'
+  - Print the current directory with import os; print(os.getcwd()).
+  - Use an absolute path or build paths with pathlib.Path.
+  - Make sure the file exists before opening it.
 - id: permission_error
   error: PermissionError
-  title: "Permission denied"
-  explanation: "Python tried to access a file, directory, or resource without enough permissions."
+  title: Permission denied
+  explanation: Python tried to access a file, directory, or resource without enough permissions.
   causes:
-    - "The file is protected."
-    - "The current user does not have permission."
-    - "The file is already used by another process."
+  - The file is protected.
+  - The current user does not have permission.
+  - The file is already used by another process.
   fixes:
-    - "Check file permissions."
-    - "Try another output directory."
-    - "Do not run random scripts with sudo unless you fully trust them."
-
+  - Check file permissions.
+  - Try another output directory.
+  - Do not run random scripts with sudo unless you fully trust them.
 - id: zero_division_error
   error: ZeroDivisionError
-  title: "Division by zero"
-  explanation: "Python cannot divide a number by zero."
+  title: Division by zero
+  explanation: Python cannot divide a number by zero.
   causes:
-    - "A divisor variable is 0."
-    - "User input produced zero."
-    - "A calculation returned zero unexpectedly."
+  - A divisor variable is 0.
+  - User input produced zero.
+  - A calculation returned zero unexpectedly.
   fixes:
-    - "Check the divisor before division."
-    - "Add a condition: if divisor != 0."
-    - "Validate user input."
-
+  - Check the divisor before division.
+  - 'Add a condition: if divisor != 0.'
+  - Validate user input.
 - id: recursion_error
   error: RecursionError
-  title: "Maximum recursion depth exceeded"
-  explanation: "A recursive function called itself too many times and did not stop in time."
+  title: Maximum recursion depth exceeded
+  explanation: A recursive function called itself too many times and did not stop in time.
   causes:
-    - "The recursive function has no correct base case."
-    - "The base case is never reached."
-    - "The input is too large for recursion."
+  - The recursive function has no correct base case.
+  - The base case is never reached.
+  - The input is too large for recursion.
   fixes:
-    - "Check the base case."
-    - "Print arguments on each recursive call to see why it does not stop."
-    - "Consider rewriting the logic with a loop."
-
+  - Check the base case.
+  - Print arguments on each recursive call to see why it does not stop.
+  - Consider rewriting the logic with a loop.
 - id: unicode_decode_error
   error: UnicodeDecodeError
-  title: "Text decoding failed"
-  explanation: "Python tried to read bytes as text, but the selected encoding could not decode them."
+  title: Text decoding failed
+  explanation: Python tried to read bytes as text, but the selected encoding could not decode them.
   causes:
-    - "The file is not UTF-8."
-    - "The file contains invalid characters for the selected encoding."
-    - "You opened a binary file as text."
+  - The file is not UTF-8.
+  - The file contains invalid characters for the selected encoding.
+  - You opened a binary file as text.
   fixes:
-    - "Try specifying encoding='utf-8'."
-    - "If the file is not UTF-8, use the correct encoding."
-    - "Open binary files with mode='rb'."
-
+  - Try specifying encoding='utf-8'.
+  - If the file is not UTF-8, use the correct encoding.
+  - Open binary files with mode='rb'.
 - id: json_decode_error
   error: JSONDecodeError
-  title: "Invalid JSON"
-  explanation: "Python tried to parse JSON, but the text is not valid JSON."
+  title: Invalid JSON
+  explanation: Python tried to parse JSON, but the text is not valid JSON.
   causes:
-    - "The JSON string is empty."
-    - "The JSON has trailing commas."
-    - "Quotes are missing around keys or string values."
-    - "The response is HTML or plain text, not JSON."
+  - The JSON string is empty.
+  - The JSON has trailing commas.
+  - Quotes are missing around keys or string values.
+  - The response is HTML or plain text, not JSON.
   fixes:
-    - "Print the raw JSON text before parsing."
-    - "Validate the JSON in a JSON formatter."
-    - "Check whether the API returned an error page instead of JSON."
-
+  - Print the raw JSON text before parsing.
+  - Validate the JSON in a JSON formatter.
+  - Check whether the API returned an error page instead of JSON.
 - id: unbound_local_error
   error: UnboundLocalError
-  title: "Local variable is used before assignment"
-  explanation: "Python treats `{name}` as a local variable inside the function, but the code tries to use it before assigning a value."
+  title: Local variable is used before assignment
+  explanation: Python treats `{name}` as a local variable inside the function, but the code tries to use it before
+    assigning a value.
   causes:
-    - "A variable is assigned somewhere inside a function, so Python considers it local."
-    - "The variable is read before the assignment happens."
-    - "You expected to use a global variable, but Python created a local scope."
+  - A variable is assigned somewhere inside a function, so Python considers it local.
+  - The variable is read before the assignment happens.
+  - You expected to use a global variable, but Python created a local scope.
   fixes:
-    - "Assign `{name}` before reading it."
-    - "Pass `{name}` as a function argument instead of relying on outer scope."
-    - "Avoid changing a global variable inside a function unless you really need to."
-    - "If you intentionally need a global variable, use the global keyword carefully."
-
+  - Assign `{name}` before reading it.
+  - Pass `{name}` as a function argument instead of relying on outer scope.
+  - Avoid changing a global variable inside a function unless you really need to.
+  - If you intentionally need a global variable, use the global keyword carefully.
 - id: assertion_error
   error: AssertionError
-  title: "Assertion failed"
-  explanation: "An assert statement or test assertion expected something to be true, but it was false."
+  title: Assertion failed
+  explanation: An assert statement or test assertion expected something to be true, but it was false.
   causes:
-    - "The actual value does not match the expected value."
-    - "A test condition is wrong."
-    - "The code under test returned an unexpected result."
+  - The actual value does not match the expected value.
+  - A test condition is wrong.
+  - The code under test returned an unexpected result.
   fixes:
-    - "Check the assertion condition."
-    - "Print or inspect the actual value before the assertion."
-    - "If this happened in a test, compare expected and actual values."
-    - "Make sure the input data matches what the assertion expects."
-
+  - Check the assertion condition.
+  - Print or inspect the actual value before the assertion.
+  - If this happened in a test, compare expected and actual values.
+  - Make sure the input data matches what the assertion expects.
 - id: runtime_error
   error: RuntimeError
-  title: "Runtime error"
-  explanation: "Python detected a problem while the program was running. RuntimeError is often raised when the operation is not allowed in the current state."
+  title: Runtime error
+  explanation: Python detected a problem while the program was running. RuntimeError is often raised when the operation
+    is not allowed in the current state.
   causes:
-    - "The program reached an invalid state."
-    - "A library raised RuntimeError for a framework-specific reason."
-    - "An async/event loop operation was used incorrectly."
+  - The program reached an invalid state.
+  - A library raised RuntimeError for a framework-specific reason.
+  - An async/event loop operation was used incorrectly.
   fixes:
-    - "Read the full error message carefully. RuntimeError usually explains the specific condition."
-    - "Check the code around {file_path}:{line_number}."
-    - "If a framework is involved, check whether the operation is allowed at that point."
-    - "Search for the exact RuntimeError message in the library documentation."
-
+  - Read the full error message carefully. RuntimeError usually explains the specific condition.
+  - Check the code around {file_path}:{line_number}.
+  - If a framework is involved, check whether the operation is allowed at that point.
+  - Search for the exact RuntimeError message in the library documentation.
 - id: os_error
   error: OSError
-  title: "Operating system error"
-  explanation: "Python asked the operating system to do something, but the OS could not complete the operation."
+  title: Operating system error
+  explanation: Python asked the operating system to do something, but the OS could not complete the operation.
   causes:
-    - "A file, directory, permission, device, or network resource is unavailable."
-    - "The path is invalid."
-    - "The process does not have enough permissions."
+  - A file, directory, permission, device, or network resource is unavailable.
+  - The path is invalid.
+  - The process does not have enough permissions.
   fixes:
-    - "Check the full error message for the OS-level reason."
-    - "Check paths, permissions, and whether the resource exists."
-    - "If this is a network operation, check connectivity and host/port values."
-
+  - Check the full error message for the OS-level reason.
+  - Check paths, permissions, and whether the resource exists.
+  - If this is a network operation, check connectivity and host/port values.
 - id: is_a_directory_error
   error: IsADirectoryError
-  title: "Expected a file, got a directory"
-  explanation: "Python expected a file path, but `{path}` points to a directory."
+  title: Expected a file, got a directory
+  explanation: Python expected a file path, but `{path}` points to a directory.
   causes:
-    - "You passed a directory path to a function that expects a file."
-    - "The file name is missing from the path."
-    - "The path variable contains the wrong value."
+  - You passed a directory path to a function that expects a file.
+  - The file name is missing from the path.
+  - The path variable contains the wrong value.
   fixes:
-    - "Pass a full file path, not just a directory path."
-    - "Check the value of the path variable."
-    - "If you want to read files from a directory, iterate through the directory contents first."
-
+  - Pass a full file path, not just a directory path.
+  - Check the value of the path variable.
+  - If you want to read files from a directory, iterate through the directory contents first.
 - id: not_a_directory_error
   error: NotADirectoryError
-  title: "Expected a directory, got a file"
-  explanation: "Python expected part of the path to be a directory, but it found a file instead."
+  title: Expected a directory, got a file
+  explanation: Python expected part of the path to be a directory, but it found a file instead.
   causes:
-    - "A path segment points to a file when Python expected a folder."
-    - "The path was built incorrectly."
-    - "A file and directory have conflicting names."
+  - A path segment points to a file when Python expected a folder.
+  - The path was built incorrectly.
+  - A file and directory have conflicting names.
   fixes:
-    - "Check every part of the path."
-    - "Print the path before using it."
-    - "Make sure parent folders exist and are actually directories."
-
+  - Check every part of the path.
+  - Print the path before using it.
+  - Make sure parent folders exist and are actually directories.
 - id: eof_error
   error: EOFError
-  title: "Input ended unexpectedly"
-  explanation: "Python expected input, but reached the end of input instead."
+  title: Input ended unexpectedly
+  explanation: Python expected input, but reached the end of input instead.
   causes:
-    - "input() was called when no input was available."
-    - "The program is running in a non-interactive environment."
-    - "A file or stream ended earlier than expected."
+  - input() was called when no input was available.
+  - The program is running in a non-interactive environment.
+  - A file or stream ended earlier than expected.
   fixes:
-    - "Do not call input() unless the user can actually type something."
-    - "Provide input through stdin if the script expects it."
-    - "Handle EOFError with try/except when input may be missing."
-
+  - Do not call input() unless the user can actually type something.
+  - Provide input through stdin if the script expects it.
+  - Handle EOFError with try/except when input may be missing.
 - id: connection_error
   error: ConnectionError
-  title: "Network connection failed"
-  explanation: "Python could not complete a network connection."
+  title: Network connection failed
+  explanation: Python could not complete a network connection.
   causes:
-    - "The server is down or unreachable."
-    - "The host or port is incorrect."
-    - "The network connection is blocked or unstable."
+  - The server is down or unreachable.
+  - The host or port is incorrect.
+  - The network connection is blocked or unstable.
   fixes:
-    - "Check the URL, host, and port."
-    - "Check whether the target service is running."
-    - "Retry the request after confirming network connectivity."
-    - "Add timeout and error handling for network calls."
-
+  - Check the URL, host, and port.
+  - Check whether the target service is running.
+  - Retry the request after confirming network connectivity.
+  - Add timeout and error handling for network calls.
 - id: timeout_error
   error: TimeoutError
-  title: "Operation timed out"
-  explanation: "An operation took too long and Python stopped waiting for it."
+  title: Operation timed out
+  explanation: An operation took too long and Python stopped waiting for it.
   causes:
-    - "A network request is too slow."
-    - "A service is not responding."
-    - "A file, socket, or process operation is blocked."
+  - A network request is too slow.
+  - A service is not responding.
+  - A file, socket, or process operation is blocked.
   fixes:
-    - "Check whether the external service is available."
-    - "Increase the timeout only if the operation is expected to take longer."
-    - "Add retry logic if this is a network request."
-    - "Handle TimeoutError with try/except."
-
+  - Check whether the external service is available.
+  - Increase the timeout only if the operation is expected to take longer.
+  - Add retry logic if this is a network request.
+  - Handle TimeoutError with try/except.
 - id: broken_pipe_error
   error: BrokenPipeError
-  title: "Broken pipe"
-  explanation: "Python tried to write data to a pipe or connection that was already closed by the other side."
+  title: Broken pipe
+  explanation: Python tried to write data to a pipe or connection that was already closed by the other side.
   causes:
-    - "The receiving process closed before Python finished writing."
-    - "Output was piped to a command that stopped early."
-    - "A network socket was closed."
+  - The receiving process closed before Python finished writing.
+  - Output was piped to a command that stopped early.
+  - A network socket was closed.
   fixes:
-    - "Check the command or process receiving the output."
-    - "Handle BrokenPipeError if writing to pipes or sockets."
-    - "Avoid writing after the connection is closed."
-
+  - Check the command or process receiving the output.
+  - Handle BrokenPipeError if writing to pipes or sockets.
+  - Avoid writing after the connection is closed.
 - id: memory_error
   error: MemoryError
-  title: "Not enough memory"
-  explanation: "Python could not allocate enough memory for the operation."
+  title: Not enough memory
+  explanation: Python could not allocate enough memory for the operation.
   causes:
-    - "The program is loading too much data into memory."
-    - "A loop or recursion is creating too many objects."
-    - "The machine does not have enough available RAM."
+  - The program is loading too much data into memory.
+  - A loop or recursion is creating too many objects.
+  - The machine does not have enough available RAM.
   fixes:
-    - "Process data in smaller chunks."
-    - "Avoid loading huge files completely into memory."
-    - "Check for infinite loops or uncontrolled list growth."
-    - "Use generators or streaming when possible."
-
+  - Process data in smaller chunks.
+  - Avoid loading huge files completely into memory.
+  - Check for infinite loops or uncontrolled list growth.
+  - Use generators or streaming when possible.
 - id: tab_error
   error: TabError
-  title: "Tabs and spaces are mixed"
-  explanation: "Python found inconsistent indentation because tabs and spaces are mixed in the same block."
+  title: Tabs and spaces are mixed
+  explanation: Python found inconsistent indentation because tabs and spaces are mixed in the same block.
   causes:
-    - "Some lines use tabs while nearby lines use spaces."
-    - "The editor displays tabs like spaces, hiding the mismatch."
-    - "Code was copied from another file or web page."
+  - Some lines use tabs while nearby lines use spaces.
+  - The editor displays tabs like spaces, hiding the mismatch.
+  - Code was copied from another file or web page.
   fixes:
-    - "Convert indentation in the file to spaces."
-    - "Use 4 spaces per indentation level."
-    - "Enable visible whitespace in your editor and check the block around {file_path}:{line_number}."
-
+  - Convert indentation in the file to spaces.
+  - Use 4 spaces per indentation level.
+  - Enable visible whitespace in your editor and check the block around {file_path}:{line_number}.
 - id: lookup_error
   error: LookupError
-  title: "Lookup failed"
-  explanation: "Python could not find an item in a collection or registry. More specific forms include KeyError and IndexError."
+  title: Lookup failed
+  explanation: Python could not find an item in a collection or registry. More specific forms include KeyError and
+    IndexError.
   causes:
-    - "A dictionary key, sequence index, codec, or registry entry is missing."
-    - "The data structure does not contain the expected value."
-    - "Input data has a different shape than the code expects."
+  - A dictionary key, sequence index, codec, or registry entry is missing.
+  - The data structure does not contain the expected value.
+  - Input data has a different shape than the code expects.
   fixes:
-    - "Inspect the value being searched before the failing line."
-    - "Check available keys, indexes, or registered names."
-    - "Handle missing values explicitly when they are valid input."
-
+  - Inspect the value being searched before the failing line.
+  - Check available keys, indexes, or registered names.
+  - Handle missing values explicitly when they are valid input.
 - id: arithmetic_error
   error: ArithmeticError
-  title: "Arithmetic operation failed"
-  explanation: "A numeric operation failed. More specific forms include ZeroDivisionError, OverflowError, and FloatingPointError."
+  title: Arithmetic operation failed
+  explanation: A numeric operation failed. More specific forms include ZeroDivisionError, OverflowError, and FloatingPointError.
   causes:
-    - "A calculation used invalid or extreme numeric values."
-    - "A divisor, exponent, or conversion produced an invalid result."
-    - "A numeric library raised a generic arithmetic exception."
+  - A calculation used invalid or extreme numeric values.
+  - A divisor, exponent, or conversion produced an invalid result.
+  - A numeric library raised a generic arithmetic exception.
   fixes:
-    - "Check the numeric inputs before the operation."
-    - "Guard division, exponentiation, and conversions with validation."
-    - "If this comes from a numeric library, inspect the exact values passed to it."
-
+  - Check the numeric inputs before the operation.
+  - Guard division, exponentiation, and conversions with validation.
+  - If this comes from a numeric library, inspect the exact values passed to it.
 - id: overflow_error
   error: OverflowError
-  title: "Number is too large"
-  explanation: "A numeric result is too large for Python or an underlying C/library operation to represent."
+  title: Number is too large
+  explanation: A numeric result is too large for Python or an underlying C/library operation to represent.
   causes:
-    - "A very large exponent, factorial, timestamp, or conversion was used."
-    - "A float operation exceeded the representable range."
-    - "A library function has a smaller numeric limit than Python integers."
+  - A very large exponent, factorial, timestamp, or conversion was used.
+  - A float operation exceeded the representable range.
+  - A library function has a smaller numeric limit than Python integers.
   fixes:
-    - "Check the size of the input values."
-    - "Use Decimal or integer-safe logic when appropriate."
-    - "Clamp or validate user input before expensive numeric operations."
-
+  - Check the size of the input values.
+  - Use Decimal or integer-safe logic when appropriate.
+  - Clamp or validate user input before expensive numeric operations.
 - id: floating_point_error
   error: FloatingPointError
-  title: "Floating point operation failed"
-  explanation: "A floating point operation raised an error, often because strict numeric error handling is enabled."
+  title: Floating point operation failed
+  explanation: A floating point operation raised an error, often because strict numeric error handling is enabled.
   causes:
-    - "The operation produced divide-by-zero, overflow, underflow, or invalid floating point output."
-    - "A library such as NumPy is configured to raise on floating point warnings."
-    - "Input arrays contain NaN, infinity, or invalid values."
+  - The operation produced divide-by-zero, overflow, underflow, or invalid floating point output.
+  - A library such as NumPy is configured to raise on floating point warnings.
+  - Input arrays contain NaN, infinity, or invalid values.
   fixes:
-    - "Inspect inputs for NaN and infinity."
-    - "Guard divide-by-zero and invalid operations."
-    - "For NumPy, check numpy.seterr and clean data before calculations."
-
+  - Inspect inputs for NaN and infinity.
+  - Guard divide-by-zero and invalid operations.
+  - For NumPy, check numpy.seterr and clean data before calculations.
 - id: reference_error
   error: ReferenceError
-  title: "Weak reference target is gone"
-  explanation: "Python tried to use an object through a weak reference after the original object was already garbage collected."
+  title: Weak reference target is gone
+  explanation: Python tried to use an object through a weak reference after the original object was already garbage
+    collected.
   causes:
-    - "Only weak references to the object remain."
-    - "A cache or callback stores weak references but no strong owner keeps the object alive."
-    - "Object lifetime is shorter than expected."
+  - Only weak references to the object remain.
+  - A cache or callback stores weak references but no strong owner keeps the object alive.
+  - Object lifetime is shorter than expected.
   fixes:
-    - "Keep a strong reference to the object while it is needed."
-    - "Check cache, signal, or callback ownership."
-    - "Handle missing weak-reference targets gracefully."
-
+  - Keep a strong reference to the object while it is needed.
+  - Check cache, signal, or callback ownership.
+  - Handle missing weak-reference targets gracefully.
 - id: environment_error
   error: EnvironmentError
-  title: "Environment or OS operation failed"
-  explanation: "An environment-level operation failed. In modern Python this is usually the same family as OSError."
+  title: Environment or OS operation failed
+  explanation: An environment-level operation failed. In modern Python this is usually the same family as OSError.
   causes:
-    - "A file, directory, permission, device, process, or network resource is unavailable."
-    - "The current environment is missing required variables or access."
-    - "The operation depends on OS state that changed."
+  - A file, directory, permission, device, process, or network resource is unavailable.
+  - The current environment is missing required variables or access.
+  - The operation depends on OS state that changed.
   fixes:
-    - "Read the exact OS message and errno."
-    - "Check paths, permissions, environment variables, and current working directory."
-    - "Prefer handling the more specific OSError subclass if available."
-
+  - Read the exact OS message and errno.
+  - Check paths, permissions, environment variables, and current working directory.
+  - Prefer handling the more specific OSError subclass if available.
 - id: io_error
   error: IOError
-  title: "Input/output operation failed"
-  explanation: "Python could not complete a read, write, or stream operation. In modern Python IOError is an alias of OSError."
+  title: Input/output operation failed
+  explanation: Python could not complete a read, write, or stream operation. In modern Python IOError is an alias
+    of OSError.
   causes:
-    - "A file path is wrong or unavailable."
-    - "A device, pipe, or network stream closed unexpectedly."
-    - "Permissions or disk space prevent the operation."
+  - A file path is wrong or unavailable.
+  - A device, pipe, or network stream closed unexpectedly.
+  - Permissions or disk space prevent the operation.
   fixes:
-    - "Check the path, stream, and permissions."
-    - "Verify that the file or device is available before using it."
-    - "Handle partial reads/writes and closed streams when working with external resources."
-
+  - Check the path, stream, and permissions.
+  - Verify that the file or device is available before using it.
+  - Handle partial reads/writes and closed streams when working with external resources.
 - id: filesystem_exists_error
   error: FileExistsError
-  title: "File or directory already exists"
-  explanation: "Python tried to create a file or directory, but something already exists at that path."
+  title: File or directory already exists
+  explanation: Python tried to create a file or directory, but something already exists at that path.
   causes:
-    - "mkdir, open with exclusive mode, or a similar create operation hit an existing path."
-    - "The code assumes it is running in an empty output directory."
-    - "A previous run already created the file."
+  - mkdir, open with exclusive mode, or a similar create operation hit an existing path.
+  - The code assumes it is running in an empty output directory.
+  - A previous run already created the file.
   fixes:
-    - "Check whether the path should be reused, overwritten, or skipped."
-    - "Use exist_ok=True with pathlib.Path.mkdir only when reusing a directory is valid."
-    - "Generate unique output names when repeated runs are expected."
-
+  - Check whether the path should be reused, overwritten, or skipped.
+  - Use exist_ok=True with pathlib.Path.mkdir only when reusing a directory is valid.
+  - Generate unique output names when repeated runs are expected.
 - id: process_lookup_error
   error: ProcessLookupError
-  title: "Process does not exist"
-  explanation: "Python tried to operate on a process ID that does not exist anymore."
+  title: Process does not exist
+  explanation: Python tried to operate on a process ID that does not exist anymore.
   causes:
-    - "The process already exited."
-    - "The PID is stale or belongs to another environment."
-    - "A subprocess was reaped before later code tried to inspect it."
+  - The process already exited.
+  - The PID is stale or belongs to another environment.
+  - A subprocess was reaped before later code tried to inspect it.
   fixes:
-    - "Check whether the process is still running before signaling it."
-    - "Store subprocess objects instead of only raw PIDs when possible."
-    - "Handle the case where a process exits between checks."
-
+  - Check whether the process is still running before signaling it.
+  - Store subprocess objects instead of only raw PIDs when possible.
+  - Handle the case where a process exits between checks.
 - id: child_process_error
   error: ChildProcessError
-  title: "Child process operation failed"
-  explanation: "Python could not complete an operation related to a child process."
+  title: Child process operation failed
+  explanation: Python could not complete an operation related to a child process.
   causes:
-    - "The child process has already been waited for."
-    - "The process is not a child of the current process."
-    - "Subprocess lifecycle is being managed twice."
+  - The child process has already been waited for.
+  - The process is not a child of the current process.
+  - Subprocess lifecycle is being managed twice.
   fixes:
-    - "Use subprocess.run for simple commands."
-    - "Call wait or communicate once per subprocess."
-    - "Keep process lifecycle handling in one place."
-
+  - Use subprocess.run for simple commands.
+  - Call wait or communicate once per subprocess.
+  - Keep process lifecycle handling in one place.
 - id: interrupted_error
   error: InterruptedError
-  title: "System call was interrupted"
-  explanation: "An OS-level operation was interrupted before it completed."
+  title: System call was interrupted
+  explanation: An OS-level operation was interrupted before it completed.
   causes:
-    - "A signal interrupted a blocking file, socket, or process operation."
-    - "The code interacts with low-level OS APIs."
-    - "The operation may need to be retried."
+  - A signal interrupted a blocking file, socket, or process operation.
+  - The code interacts with low-level OS APIs.
+  - The operation may need to be retried.
   fixes:
-    - "Retry the operation if it is safe to do so."
-    - "Check signal handlers and timeout logic."
-    - "Use higher-level APIs when possible."
-
+  - Retry the operation if it is safe to do so.
+  - Check signal handlers and timeout logic.
+  - Use higher-level APIs when possible.
 - id: blocking_io_error
   error: BlockingIOError
-  title: "Non-blocking operation would block"
-  explanation: "A non-blocking file descriptor, socket, or stream operation could not proceed immediately."
+  title: Non-blocking operation would block
+  explanation: A non-blocking file descriptor, socket, or stream operation could not proceed immediately.
   causes:
-    - "The resource is in non-blocking mode."
-    - "No data is available to read yet, or the write buffer is full."
-    - "Async or selector code is missing readiness checks."
+  - The resource is in non-blocking mode.
+  - No data is available to read yet, or the write buffer is full.
+  - Async or selector code is missing readiness checks.
   fixes:
-    - "Wait until the resource is ready before reading or writing."
-    - "Use selectors, asyncio, or proper polling for non-blocking IO."
-    - "Handle BlockingIOError as a normal retry condition in non-blocking code."
-
+  - Wait until the resource is ready before reading or writing.
+  - Use selectors, asyncio, or proper polling for non-blocking IO.
+  - Handle BlockingIOError as a normal retry condition in non-blocking code.
 - id: not_implemented_error
   error: NotImplementedError
-  title: "Code path is not implemented"
-  explanation: "The program reached a method or branch that is intentionally left unimplemented."
+  title: Code path is not implemented
+  explanation: The program reached a method or branch that is intentionally left unimplemented.
   causes:
-    - "An abstract method was not overridden."
-    - "A placeholder implementation was called in production code."
-    - "A subclass does not implement the required interface."
+  - An abstract method was not overridden.
+  - A placeholder implementation was called in production code.
+  - A subclass does not implement the required interface.
   fixes:
-    - "Implement the missing method or branch."
-    - "Check whether the correct subclass or strategy object is being used."
-    - "Remove placeholder raises once the feature is complete."
-
+  - Implement the missing method or branch.
+  - Check whether the correct subclass or strategy object is being used.
+  - Remove placeholder raises once the feature is complete.
 - id: system_error
   error: SystemError
-  title: "Internal interpreter or extension error"
-  explanation: "Python or a native extension reported an internal error. This is uncommon in normal pure-Python code."
+  title: Internal interpreter or extension error
+  explanation: Python or a native extension reported an internal error. This is uncommon in normal pure-Python code.
   causes:
-    - "A C extension, binary wheel, or interpreter edge case failed."
-    - "Package versions are incompatible with the Python version."
-    - "Native dependencies are corrupted or mismatched."
+  - A C extension, binary wheel, or interpreter edge case failed.
+  - Package versions are incompatible with the Python version.
+  - Native dependencies are corrupted or mismatched.
   fixes:
-    - "Check the package and Python versions involved."
-    - "Reinstall or upgrade the package that appears in the traceback."
-    - "If this is reproducible, search the package issue tracker with the exact message."
-
+  - Check the package and Python versions involved.
+  - Reinstall or upgrade the package that appears in the traceback.
+  - If this is reproducible, search the package issue tracker with the exact message.
 - id: system_exit
   error: SystemExit
-  title: "Program requested exit"
-  explanation: "The program called sys.exit, argparse/typer exited after CLI parsing, or a framework intentionally stopped execution."
+  title: Program requested exit
+  explanation: The program called sys.exit, argparse/typer exited after CLI parsing, or a framework intentionally
+    stopped execution.
   causes:
-    - "A CLI command received invalid arguments."
-    - "The code called sys.exit directly."
-    - "A test invoked code that exits the process."
+  - A CLI command received invalid arguments.
+  - The code called sys.exit directly.
+  - A test invoked code that exits the process.
   fixes:
-    - "Check the exit code and message."
-    - "For tests, assert SystemExit or call the function below the CLI layer."
-    - "Avoid sys.exit in reusable library code."
-
+  - Check the exit code and message.
+  - For tests, assert SystemExit or call the function below the CLI layer.
+  - Avoid sys.exit in reusable library code.
 - id: keyboard_interrupt
   error: KeyboardInterrupt
-  title: "Program was interrupted"
-  explanation: "The running Python process received an interrupt, usually from Ctrl+C."
+  title: Program was interrupted
+  explanation: The running Python process received an interrupt, usually from Ctrl+C.
   causes:
-    - "The user interrupted the command."
-    - "A terminal, IDE, or process manager sent an interrupt signal."
-    - "The program was taking too long or waiting indefinitely."
+  - The user interrupted the command.
+  - A terminal, IDE, or process manager sent an interrupt signal.
+  - The program was taking too long or waiting indefinitely.
   fixes:
-    - "Rerun the command if the interrupt was accidental."
-    - "Check for long-running loops, blocking input, or slow network calls."
-    - "Handle KeyboardInterrupt only when cleanup is needed."
-
+  - Rerun the command if the interrupt was accidental.
+  - Check for long-running loops, blocking input, or slow network calls.
+  - Handle KeyboardInterrupt only when cleanup is needed.
 - id: generator_exit
   error: GeneratorExit
-  title: "Generator was closed"
-  explanation: "A generator or coroutine was closed while it was still running."
+  title: Generator was closed
+  explanation: A generator or coroutine was closed while it was still running.
   causes:
-    - "The generator was garbage collected or explicitly closed."
-    - "A yield happened while the generator was closing."
-    - "Async generator cleanup is doing work that is not allowed during close."
+  - The generator was garbage collected or explicitly closed.
+  - A yield happened while the generator was closing.
+  - Async generator cleanup is doing work that is not allowed during close.
   fixes:
-    - "Keep generator cleanup simple and final."
-    - "Do not yield from a generator while handling GeneratorExit."
-    - "Check async generator lifecycle and cancellation handling."
-
+  - Keep generator cleanup simple and final.
+  - Do not yield from a generator while handling GeneratorExit.
+  - Check async generator lifecycle and cancellation handling.
 - id: stop_iteration
   error: StopIteration
-  title: "Iterator has no more values"
-  explanation: "next() was called on an iterator that is already exhausted."
+  title: Iterator has no more values
+  explanation: next() was called on an iterator that is already exhausted.
   causes:
-    - "The iterator is empty."
-    - "The code called next() without a default value."
-    - "A generator returned before yielding another value."
+  - The iterator is empty.
+  - The code called next() without a default value.
+  - A generator returned before yielding another value.
   fixes:
-    - "Use a for loop when possible."
-    - "Call next(iterator, default) if an empty iterator is valid."
-    - "Check why the iterable has fewer items than expected."
-
+  - Use a for loop when possible.
+  - Call next(iterator, default) if an empty iterator is valid.
+  - Check why the iterable has fewer items than expected.
 - id: stop_async_iteration
   error: StopAsyncIteration
-  title: "Async iterator has no more values"
-  explanation: "An async iterator finished and has no more values to produce."
+  title: Async iterator has no more values
+  explanation: An async iterator finished and has no more values to produce.
   causes:
-    - "The async iterator is empty."
-    - "anext() was called without a default value."
-    - "Async generator logic returned earlier than expected."
+  - The async iterator is empty.
+  - anext() was called without a default value.
+  - Async generator logic returned earlier than expected.
   fixes:
-    - "Use async for when possible."
-    - "Call anext(iterator, default) if an empty async iterator is valid."
-    - "Check async generator conditions and data source availability."
-
+  - Use async for when possible.
+  - Call anext(iterator, default) if an empty async iterator is valid.
+  - Check async generator conditions and data source availability.
 - id: exception_group
   error: ExceptionGroup
-  title: "Multiple exceptions happened together"
-  explanation: "Python grouped multiple exceptions into one ExceptionGroup, often from task groups or concurrent code."
+  title: Multiple exceptions happened together
+  explanation: Python grouped multiple exceptions into one ExceptionGroup, often from task groups or concurrent
+    code.
   causes:
-    - "Several async tasks failed at the same time."
-    - "Concurrent code collected multiple errors before raising."
-    - "Only the group header was inspected, not the nested exceptions."
+  - Several async tasks failed at the same time.
+  - Concurrent code collected multiple errors before raising.
+  - Only the group header was inspected, not the nested exceptions.
   fixes:
-    - "Expand the traceback and read each nested exception."
-    - "Fix the innermost specific errors first."
-    - "Use except* handlers when you need to handle grouped exception types separately."
-
+  - Expand the traceback and read each nested exception.
+  - Fix the innermost specific errors first.
+  - Use except* handlers when you need to handle grouped exception types separately.
 - id: base_exception_group
   error: BaseExceptionGroup
-  title: "Grouped base exceptions"
-  explanation: "Python grouped multiple BaseException instances. This is similar to ExceptionGroup but can include non-Exception base exceptions."
+  title: Grouped base exceptions
+  explanation: Python grouped multiple BaseException instances. This is similar to ExceptionGroup but can include
+    non-Exception base exceptions.
   causes:
-    - "Concurrent tasks raised several failures."
-    - "Cancellation or system-level exceptions were grouped."
-    - "Nested traceback details are being overlooked."
+  - Concurrent tasks raised several failures.
+  - Cancellation or system-level exceptions were grouped.
+  - Nested traceback details are being overlooked.
   fixes:
-    - "Inspect the nested exceptions inside the group."
-    - "Handle specific grouped types with except* where appropriate."
-    - "Check task group cancellation and cleanup logic."
-
+  - Inspect the nested exceptions inside the group.
+  - Handle specific grouped types with except* where appropriate.
+  - Check task group cancellation and cleanup logic.
 - id: async_cancelled_error
   error: CancelledError
-  match:
-    - "asyncio.exceptions.CancelledError"
-    - "concurrent.futures._base.CancelledError"
-    - "CancelledError"
-  title: "Async task or future was cancelled"
-  explanation: "An asyncio task or future was cancelled before it completed."
+  title: Async task or future was cancelled
+  explanation: An asyncio task or future was cancelled before it completed.
   causes:
-    - "A timeout cancelled the task."
-    - "A parent task, TaskGroup, or event loop shutdown cancelled pending work."
-    - "The code caught broad exceptions and did not account for cancellation semantics."
+  - A timeout cancelled the task.
+  - A parent task, TaskGroup, or event loop shutdown cancelled pending work.
+  - The code caught broad exceptions and did not account for cancellation semantics.
   fixes:
-    - "Find who calls cancel() or where the timeout is applied."
-    - "Let CancelledError propagate after cleanup unless you intentionally suppress it."
-    - "Use try/finally for cleanup around async work."
-
+  - Find who calls cancel() or where the timeout is applied.
+  - Let CancelledError propagate after cleanup unless you intentionally suppress it.
+  - Use try/finally for cleanup around async work.
+  match_any:
+  - asyncio.exceptions.CancelledError
+  - concurrent.futures._base.CancelledError
+  - CancelledError
+  full_error_types:
+  - asyncio.exceptions.CancelledError
+  - concurrent.futures._base.CancelledError
 - id: async_timeout_error
   error: TimeoutError
-  match:
-    - "asyncio.exceptions.TimeoutError"
-    - "asyncio.wait_for"
-    - "asyncio.timeout"
-  title: "Async operation timed out"
-  explanation: "An asyncio operation exceeded its timeout."
+  title: Async operation timed out
+  explanation: An asyncio operation exceeded its timeout.
   causes:
-    - "A network, database, or queue operation is slow."
-    - "The timeout is too small for the workload."
-    - "A coroutine is blocked by synchronous work."
+  - A network, database, or queue operation is slow.
+  - The timeout is too small for the workload.
+  - A coroutine is blocked by synchronous work.
   fixes:
-    - "Check the awaited operation inside the timeout."
-    - "Move blocking code out of the event loop."
-    - "Increase the timeout only after confirming the operation is healthy."
-
+  - Check the awaited operation inside the timeout.
+  - Move blocking code out of the event loop.
+  - Increase the timeout only after confirming the operation is healthy.
+  match_any:
+  - asyncio.exceptions.TimeoutError
+  - asyncio.wait_for
+  - asyncio.timeout
 - id: subprocess_called_process_error
   error: CalledProcessError
-  match:
-    - "subprocess.CalledProcessError"
-    - "Command '"
-    - "returned non-zero exit status"
-  title: "Subprocess command failed"
-  explanation: "A command launched from Python exited with a non-zero status while check=True was enabled."
+  title: Subprocess command failed
+  explanation: A command launched from Python exited with a non-zero status while check=True was enabled.
   causes:
-    - "The external command failed."
-    - "Arguments, paths, environment variables, or permissions are wrong."
-    - "The command writes the useful error details to stderr."
+  - The external command failed.
+  - Arguments, paths, environment variables, or permissions are wrong.
+  - The command writes the useful error details to stderr.
   fixes:
-    - "Run the command manually and inspect stdout/stderr."
-    - "Check command arguments and current working directory."
-    - "If failure is allowed, call subprocess.run with check=False and handle returncode."
-
+  - Run the command manually and inspect stdout/stderr.
+  - Check command arguments and current working directory.
+  - If failure is allowed, call subprocess.run with check=False and handle returncode.
+  match_any:
+  - subprocess.CalledProcessError
+  - Command '
+  - returned non-zero exit status
 - id: subprocess_timeout_expired
   error: TimeoutExpired
-  match:
-    - "subprocess.TimeoutExpired"
-    - "timed out after"
-  title: "Subprocess timed out"
-  explanation: "A command launched from Python did not finish before the configured timeout."
+  title: Subprocess timed out
+  explanation: A command launched from Python did not finish before the configured timeout.
   causes:
-    - "The process is waiting for input."
-    - "The command is slower than expected."
-    - "The subprocess produced output that is not being consumed."
+  - The process is waiting for input.
+  - The command is slower than expected.
+  - The subprocess produced output that is not being consumed.
   fixes:
-    - "Check whether the command waits for stdin or confirmation."
-    - "Use communicate() or capture_output correctly."
-    - "Increase timeout only if the command normally needs more time."
-
+  - Check whether the command waits for stdin or confirmation.
+  - Use communicate() or capture_output correctly.
+  - Increase timeout only if the command normally needs more time.
+  match_any:
+  - subprocess.TimeoutExpired
+  - timed out after
 - id: config_parser_error
   error: Error
-  match:
-    - "configparser."
-    - "configparser.Error"
-  title: "ConfigParser failed to read configuration"
-  explanation: "Python's configparser could not parse or use an INI-style configuration file."
+  title: ConfigParser failed to read configuration
+  explanation: Python's configparser could not parse or use an INI-style configuration file.
   causes:
-    - "The file is not valid INI syntax."
-    - "A required section or option is missing."
-    - "Interpolation syntax is invalid."
+  - The file is not valid INI syntax.
+  - A required section or option is missing.
+  - Interpolation syntax is invalid.
   fixes:
-    - "Check section headers like [section]."
-    - "Check key=value lines and interpolation placeholders."
-    - "Read the exact configparser subclass in the traceback for the specific issue."
-
+  - Check section headers like [section].
+  - Check key=value lines and interpolation placeholders.
+  - Read the exact configparser subclass in the traceback for the specific issue.
+  match_any:
+  - configparser.
+  - configparser.Error
+  full_error_types:
+  - configparser.Error
+  - configparser.ParsingError
+  - configparser.MissingSectionHeaderError
+  - configparser.DuplicateSectionError
+  - configparser.DuplicateOptionError
 - id: argparse_argument_error
   error: ArgumentError
-  match:
-    - "argparse.ArgumentError"
-    - "argument"
-  title: "CLI argument definition is invalid"
-  explanation: "argparse detected a problem with how an argument is defined or parsed."
+  title: CLI argument definition is invalid
+  explanation: argparse detected a problem with how an argument is defined or parsed.
   causes:
-    - "An option string is duplicated."
-    - "Argument configuration conflicts with another argument."
-    - "The parser setup is invalid."
+  - An option string is duplicated.
+  - Argument configuration conflicts with another argument.
+  - The parser setup is invalid.
   fixes:
-    - "Check add_argument calls for duplicate flags."
-    - "Check mutually exclusive groups and required flags."
-    - "Run the CLI with --help to inspect the generated interface."
-
+  - Check add_argument calls for duplicate flags.
+  - Check mutually exclusive groups and required flags.
+  - Run the CLI with --help to inspect the generated interface.
+  match_any:
+  - argparse.ArgumentError
+  - argument
+  full_error_types:
+  - argparse.ArgumentError
 - id: argparse_exit
   error: SystemExit
-  match:
-    - "argparse"
-    - "usage:"
-  title: "CLI parser exited"
-  explanation: "argparse printed usage and exited, usually because command-line arguments were missing or invalid."
+  title: CLI parser exited
+  explanation: argparse printed usage and exited, usually because command-line arguments were missing or invalid.
   causes:
-    - "A required argument is missing."
-    - "An unknown option was passed."
-    - "A value has the wrong format."
+  - A required argument is missing.
+  - An unknown option was passed.
+  - A value has the wrong format.
   fixes:
-    - "Run the command with --help."
-    - "Check required positional arguments and option names."
-    - "In tests, catch SystemExit and assert the exit code."
-
+  - Run the command with --help.
+  - Check required positional arguments and option names.
+  - In tests, catch SystemExit and assert the exit code.
+  match_any:
+  - argparse
+  - 'usage:'
 - id: dataclass_frozen_instance_error
   error: FrozenInstanceError
-  match:
-    - "dataclasses.FrozenInstanceError"
-    - "cannot assign to field"
-  title: "Frozen dataclass cannot be changed"
-  explanation: "Code tried to assign to a field on a dataclass created with frozen=True."
+  title: Frozen dataclass cannot be changed
+  explanation: Code tried to assign to a field on a dataclass created with frozen=True.
   causes:
-    - "The object is intentionally immutable."
-    - "Code tries to update the object after creation."
-    - "A default value should have been passed to the constructor."
+  - The object is intentionally immutable.
+  - Code tries to update the object after creation.
+  - A default value should have been passed to the constructor.
   fixes:
-    - "Create a new instance with the desired value."
-    - "Use dataclasses.replace for immutable updates."
-    - "Remove frozen=True only if mutability is actually intended."
-
+  - Create a new instance with the desired value.
+  - Use dataclasses.replace for immutable updates.
+  - Remove frozen=True only if mutability is actually intended.
+  match_any:
+  - dataclasses.FrozenInstanceError
+  - cannot assign to field
+  full_error_types:
+  - dataclasses.FrozenInstanceError
 - id: pydantic_validation_error
   error: ValidationError
-  match:
-    - "pydantic"
-    - "pydantic_core"
-    - "ValidationError"
-  title: "Pydantic validation failed"
-  explanation: "Pydantic could not validate input data against the declared model schema."
+  title: Pydantic validation failed
+  explanation: Pydantic could not validate input data against the declared model schema.
   causes:
-    - "A required field is missing."
-    - "A field has the wrong type or invalid format."
-    - "Model aliases, strict mode, or validators reject the value."
+  - A required field is missing.
+  - A field has the wrong type or invalid format.
+  - Model aliases, strict mode, or validators reject the value.
   fixes:
-    - "Read the field path and error type in the validation output."
-    - "Fix the input data or adjust the Pydantic model."
-    - "Use Optional fields or defaults only when missing data is valid."
-
+  - Read the field path and error type in the validation output.
+  - Fix the input data or adjust the Pydantic model.
+  - Use Optional fields or defaults only when missing data is valid.
+  match_any:
+  - pydantic
+  - pydantic_core
+  - ValidationError
+  full_error_types:
+  - pydantic.ValidationError
+  - pydantic_core._pydantic_core.ValidationError
+  frameworks:
+  - Pydantic
 - id: pydantic_user_error
   error: PydanticUserError
-  match:
-    - "pydantic.errors.PydanticUserError"
-    - "PydanticUserError"
-  title: "Pydantic model configuration is invalid"
-  explanation: "Pydantic detected an invalid model, validator, annotation, or configuration."
+  title: Pydantic model configuration is invalid
+  explanation: Pydantic detected an invalid model, validator, annotation, or configuration.
   causes:
-    - "A validator or field serializer is declared incorrectly."
-    - "A type annotation is unsupported or incomplete."
-    - "Pydantic v1 and v2 APIs are mixed."
+  - A validator or field serializer is declared incorrectly.
+  - A type annotation is unsupported or incomplete.
+  - Pydantic v1 and v2 APIs are mixed.
   fixes:
-    - "Read the code in the Pydantic error message."
-    - "Check whether the project uses Pydantic v1 or v2."
-    - "Update validators, model_config, and annotations to match that version."
-
+  - Read the code in the Pydantic error message.
+  - Check whether the project uses Pydantic v1 or v2.
+  - Update validators, model_config, and annotations to match that version.
+  full_error_types:
+  - pydantic.errors.PydanticUserError
+  - pydantic.PydanticUserError
+  match_any:
+  - pydantic.errors.PydanticUserError
+  - PydanticUserError
+  frameworks:
+  - Pydantic
 - id: django_template_does_not_exist
   error: TemplateDoesNotExist
-  match:
-    - "django.template.exceptions.TemplateDoesNotExist"
-    - "TemplateDoesNotExist"
-  title: "Django template was not found"
-  explanation: "Django could not find the template file requested by render, include, or a class-based view."
+  title: Django template was not found
+  explanation: Django could not find the template file requested by render, include, or a class-based view.
   causes:
-    - "The template path is misspelled."
-    - "The template is outside configured template directories."
-    - "APP_DIRS, DIRS, or INSTALLED_APPS is configured incorrectly."
+  - The template path is misspelled.
+  - The template is outside configured template directories.
+  - APP_DIRS, DIRS, or INSTALLED_APPS is configured incorrectly.
   fixes:
-    - "Check the template name and folder structure."
-    - "Verify TEMPLATES['DIRS'] and APP_DIRS in settings.py."
-    - "Make sure the app containing templates is in INSTALLED_APPS."
-
+  - Check the template name and folder structure.
+  - Verify TEMPLATES['DIRS'] and APP_DIRS in settings.py.
+  - Make sure the app containing templates is in INSTALLED_APPS.
+  full_error_types:
+  - django.template.exceptions.TemplateDoesNotExist
+  match_any:
+  - django.template.exceptions.TemplateDoesNotExist
+  - TemplateDoesNotExist
+  frameworks:
+  - Django
 - id: django_object_does_not_exist
   error: ObjectDoesNotExist
-  match:
-    - "django.core.exceptions.ObjectDoesNotExist"
-    - "DoesNotExist"
-    - ".DoesNotExist"
-  title: "Django database object was not found"
-  explanation: "Django ORM expected a database row, but no matching object exists."
+  title: Django database object was not found
+  explanation: Django ORM expected a database row, but no matching object exists.
   causes:
-    - "get() was used with filters that match nothing."
-    - "The object was deleted or belongs to another user/tenant."
-    - "The database has not been seeded with expected data."
+  - get() was used with filters that match nothing.
+  - The object was deleted or belongs to another user/tenant.
+  - The database has not been seeded with expected data.
   fixes:
-    - "Use filter().first() if a missing object is allowed."
-    - "Catch the model's DoesNotExist exception for optional records."
-    - "Check query filters and database contents."
-
+  - Use filter().first() if a missing object is allowed.
+  - Catch the model's DoesNotExist exception for optional records.
+  - Check query filters and database contents.
+  match_any:
+  - django.core.exceptions.ObjectDoesNotExist
+  - DoesNotExist
+  - .DoesNotExist
+  full_error_types:
+  - django.core.exceptions.ObjectDoesNotExist
+  frameworks:
+  - Django
 - id: django_model_does_not_exist
   error: DoesNotExist
-  match:
-    - "DoesNotExist"
-    - ".DoesNotExist"
-  title: "Django database object was not found"
-  explanation: "A Django model-specific DoesNotExist exception means the ORM expected a database row, but no matching object exists."
+  title: Django database object was not found
+  explanation: A Django model-specific DoesNotExist exception means the ORM expected a database row, but no matching
+    object exists.
   causes:
-    - "get() was used with filters that match nothing."
-    - "The object was deleted or belongs to another user/tenant."
-    - "Expected seed data is missing."
+  - get() was used with filters that match nothing.
+  - The object was deleted or belongs to another user/tenant.
+  - Expected seed data is missing.
   fixes:
-    - "Use filter().first() if a missing object is allowed."
-    - "Catch Model.DoesNotExist for optional records."
-    - "Check query filters and database contents."
-
+  - Use filter().first() if a missing object is allowed.
+  - Catch Model.DoesNotExist for optional records.
+  - Check query filters and database contents.
+  match_any:
+  - DoesNotExist
+  - .DoesNotExist
 - id: django_multiple_objects_returned
   error: MultipleObjectsReturned
-  match:
-    - "django.core.exceptions.MultipleObjectsReturned"
-    - "MultipleObjectsReturned"
-  title: "Django query returned multiple objects"
-  explanation: "Django ORM get() expected one row, but the query matched more than one."
+  title: Django query returned multiple objects
+  explanation: Django ORM get() expected one row, but the query matched more than one.
   causes:
-    - "The filter is not specific enough."
-    - "The database is missing a uniqueness constraint."
-    - "Duplicate data exists."
+  - The filter is not specific enough.
+  - The database is missing a uniqueness constraint.
+  - Duplicate data exists.
   fixes:
-    - "Use more specific filters."
-    - "Use filter() when multiple results are valid."
-    - "Add or fix uniqueness constraints if only one row should exist."
-
+  - Use more specific filters.
+  - Use filter() when multiple results are valid.
+  - Add or fix uniqueness constraints if only one row should exist.
+  match_any:
+  - django.core.exceptions.MultipleObjectsReturned
+  - MultipleObjectsReturned
+  full_error_types:
+  - django.core.exceptions.MultipleObjectsReturned
+  frameworks:
+  - Django
 - id: django_integrity_error
   error: IntegrityError
-  match:
-    - "django.db.utils.IntegrityError"
-  title: "Django database integrity constraint failed"
-  explanation: "The database rejected a Django ORM write because it violates a constraint."
+  title: Django database integrity constraint failed
+  explanation: The database rejected a Django ORM write because it violates a constraint.
   causes:
-    - "A required field is null."
-    - "A unique constraint is duplicated."
-    - "A foreign key points to a missing row."
+  - A required field is null.
+  - A unique constraint is duplicated.
+  - A foreign key points to a missing row.
   fixes:
-    - "Read the database constraint name in the error message."
-    - "Validate data before saving."
-    - "Check migrations and database schema."
-
+  - Read the database constraint name in the error message.
+  - Validate data before saving.
+  - Check migrations and database schema.
+  full_error_types:
+  - django.db.utils.IntegrityError
+  - django.db.IntegrityError
+  match_any:
+  - django.db.utils.IntegrityError
+  frameworks:
+  - Django
 - id: sqlalchemy_integrity_error
   error: IntegrityError
-  match:
-    - "sqlalchemy.exc.IntegrityError"
-  title: "SQLAlchemy database integrity constraint failed"
-  explanation: "The database rejected a SQLAlchemy insert, update, or delete because it violates a constraint."
+  title: SQLAlchemy database integrity constraint failed
+  explanation: The database rejected a SQLAlchemy insert, update, or delete because it violates a constraint.
   causes:
-    - "A unique value already exists."
-    - "A non-null field received None."
-    - "A foreign key references a missing row."
+  - A unique value already exists.
+  - A non-null field received None.
+  - A foreign key references a missing row.
   fixes:
-    - "Read the original DBAPI error for the exact constraint."
-    - "Validate or de-duplicate data before committing."
-    - "Check model definitions and migrations."
-
+  - Read the original DBAPI error for the exact constraint.
+  - Validate or de-duplicate data before committing.
+  - Check model definitions and migrations.
+  full_error_types:
+  - sqlalchemy.exc.IntegrityError
+  match_any:
+  - sqlalchemy.exc.IntegrityError
+  frameworks:
+  - SQLAlchemy
 - id: sqlalchemy_programming_error
   error: ProgrammingError
-  match:
-    - "sqlalchemy.exc.ProgrammingError"
-  title: "SQLAlchemy SQL or schema problem"
-  explanation: "SQLAlchemy sent SQL that the database could not execute."
+  title: SQLAlchemy SQL or schema problem
+  explanation: SQLAlchemy sent SQL that the database could not execute.
   causes:
-    - "A table, column, function, or SQL syntax is wrong."
-    - "Migrations were not applied."
-    - "Raw SQL uses the wrong dialect."
+  - A table, column, function, or SQL syntax is wrong.
+  - Migrations were not applied.
+  - Raw SQL uses the wrong dialect.
   fixes:
-    - "Inspect the SQL and DBAPI message in the traceback."
-    - "Apply or regenerate migrations."
-    - "Check table and column names against the actual database schema."
-
+  - Inspect the SQL and DBAPI message in the traceback.
+  - Apply or regenerate migrations.
+  - Check table and column names against the actual database schema.
+  full_error_types:
+  - sqlalchemy.exc.ProgrammingError
+  match_any:
+  - sqlalchemy.exc.ProgrammingError
+  frameworks:
+  - SQLAlchemy
 - id: sqlalchemy_no_result_found
   error: NoResultFound
-  match:
-    - "sqlalchemy.exc.NoResultFound"
-    - "NoResultFound"
-  title: "SQLAlchemy query found no row"
-  explanation: "A SQLAlchemy query expected exactly one row, but the result set is empty."
+  title: SQLAlchemy query found no row
+  explanation: A SQLAlchemy query expected exactly one row, but the result set is empty.
   causes:
-    - "one() or scalar_one() was used on an empty query."
-    - "Filters are too strict or use the wrong values."
-    - "Expected seed data is missing."
+  - one() or scalar_one() was used on an empty query.
+  - Filters are too strict or use the wrong values.
+  - Expected seed data is missing.
   fixes:
-    - "Use one_or_none() if no row is valid."
-    - "Check filters and database contents."
-    - "Handle the missing-row case explicitly."
-
+  - Use one_or_none() if no row is valid.
+  - Check filters and database contents.
+  - Handle the missing-row case explicitly.
+  match_any:
+  - sqlalchemy.exc.NoResultFound
+  - NoResultFound
+  full_error_types:
+  - sqlalchemy.exc.NoResultFound
+  frameworks:
+  - SQLAlchemy
 - id: sqlalchemy_multiple_results_found
   error: MultipleResultsFound
-  match:
-    - "sqlalchemy.exc.MultipleResultsFound"
-    - "MultipleResultsFound"
-  title: "SQLAlchemy query found multiple rows"
-  explanation: "A SQLAlchemy query expected one row, but multiple rows matched."
+  title: SQLAlchemy query found multiple rows
+  explanation: A SQLAlchemy query expected one row, but multiple rows matched.
   causes:
-    - "one() or scalar_one() was used with non-unique filters."
-    - "Duplicate data exists."
-    - "The model lacks a uniqueness constraint."
+  - one() or scalar_one() was used with non-unique filters.
+  - Duplicate data exists.
+  - The model lacks a uniqueness constraint.
   fixes:
-    - "Use more specific filters or order/limit when appropriate."
-    - "Use all() when multiple rows are valid."
-    - "Add uniqueness constraints if the data model requires one result."
-
+  - Use more specific filters or order/limit when appropriate.
+  - Use all() when multiple rows are valid.
+  - Add uniqueness constraints if the data model requires one result.
+  match_any:
+  - sqlalchemy.exc.MultipleResultsFound
+  - MultipleResultsFound
+  full_error_types:
+  - sqlalchemy.exc.MultipleResultsFound
+  frameworks:
+  - SQLAlchemy
 - id: requests_connection_error
   error: ConnectionError
-  match:
-    - "requests.exceptions.ConnectionError"
-    - "urllib3.exceptions"
-  title: "requests could not connect"
-  explanation: "The requests library could not establish or keep a network connection."
+  title: requests could not connect
+  explanation: The requests library could not establish or keep a network connection.
   causes:
-    - "The host is unreachable or the URL is wrong."
-    - "DNS, proxy, firewall, or TLS setup is failing."
-    - "The remote service is down."
+  - The host is unreachable or the URL is wrong.
+  - DNS, proxy, firewall, or TLS setup is failing.
+  - The remote service is down.
   fixes:
-    - "Check the URL and network connectivity."
-    - "Try the same URL with curl or a browser."
-    - "Set a timeout and handle retries for external services."
-
+  - Check the URL and network connectivity.
+  - Try the same URL with curl or a browser.
+  - Set a timeout and handle retries for external services.
+  full_error_types:
+  - requests.exceptions.ConnectionError
+  match_any:
+  - requests.exceptions.ConnectionError
+  - urllib3.exceptions
 - id: requests_timeout
   error: Timeout
-  match:
-    - "requests.exceptions.Timeout"
-    - "ReadTimeout"
-    - "ConnectTimeout"
-  title: "requests timed out"
-  explanation: "The requests library waited too long for connection or response data."
+  title: requests timed out
+  explanation: The requests library waited too long for connection or response data.
   causes:
-    - "The server is slow or unavailable."
-    - "The timeout value is too low."
-    - "A proxy or network path is delaying traffic."
+  - The server is slow or unavailable.
+  - The timeout value is too low.
+  - A proxy or network path is delaying traffic.
   fixes:
-    - "Check whether the target service responds normally."
-    - "Use separate connect/read timeouts when needed."
-    - "Add retry/backoff only for safe idempotent requests."
-
+  - Check whether the target service responds normally.
+  - Use separate connect/read timeouts when needed.
+  - Add retry/backoff only for safe idempotent requests.
+  full_error_types:
+  - requests.exceptions.Timeout
+  - requests.exceptions.ReadTimeout
+  - requests.exceptions.ConnectTimeout
+  match_any:
+  - requests.exceptions.Timeout
+  - ReadTimeout
+  - ConnectTimeout
 - id: requests_http_error
   error: HTTPError
-  match:
-    - "requests.exceptions.HTTPError"
-    - "raise_for_status"
-  title: "HTTP request returned an error status"
-  explanation: "requests raised HTTPError because raise_for_status() saw a 4xx or 5xx response."
+  title: HTTP request returned an error status
+  explanation: requests raised HTTPError because raise_for_status() saw a 4xx or 5xx response.
   causes:
-    - "The API request has invalid URL, headers, auth, or body."
-    - "The server returned an application error."
-    - "The endpoint requires different permissions or parameters."
+  - The API request has invalid URL, headers, auth, or body.
+  - The server returned an application error.
+  - The endpoint requires different permissions or parameters.
   fixes:
-    - "Inspect response.status_code and response.text."
-    - "Check authentication, request body, and endpoint path."
-    - "Handle expected 4xx responses without treating them as crashes."
-
+  - Inspect response.status_code and response.text.
+  - Check authentication, request body, and endpoint path.
+  - Handle expected 4xx responses without treating them as crashes.
+  match_any:
+  - requests.exceptions.HTTPError
+  - raise_for_status
+  full_error_types:
+  - requests.exceptions.HTTPError
 - id: urllib_url_error
   error: URLError
-  match:
-    - "urllib.error.URLError"
-    - "URLError"
-  title: "urllib request failed"
-  explanation: "urllib could not complete a URL request."
+  title: urllib request failed
+  explanation: urllib could not complete a URL request.
   causes:
-    - "The URL, DNS, proxy, or network connection failed."
-    - "TLS certificate validation failed."
-    - "The remote server is unavailable."
+  - The URL, DNS, proxy, or network connection failed.
+  - TLS certificate validation failed.
+  - The remote server is unavailable.
   fixes:
-    - "Check the URL and network path."
-    - "Inspect the reason attribute in the error."
-    - "Use explicit timeouts and handle network failures."
-
+  - Check the URL and network path.
+  - Inspect the reason attribute in the error.
+  - Use explicit timeouts and handle network failures.
+  full_error_types:
+  - urllib.error.URLError
+  match_any:
+  - urllib.error.URLError
+  - URLError
 - id: urllib_http_error
   error: HTTPError
-  match:
-    - "urllib.error.HTTPError"
-    - "HTTP Error"
-  title: "urllib received an HTTP error status"
-  explanation: "urllib received an HTTP error response from the server."
+  title: urllib received an HTTP error status
+  explanation: urllib received an HTTP error response from the server.
   causes:
-    - "The endpoint returned a 4xx or 5xx status."
-    - "Request headers, auth, body, or method are invalid."
-    - "The server rejected the request."
+  - The endpoint returned a 4xx or 5xx status.
+  - Request headers, auth, body, or method are invalid.
+  - The server rejected the request.
   fixes:
-    - "Check the status code and response body."
-    - "Verify auth, headers, method, and URL."
-    - "Handle expected HTTP errors explicitly."
-
+  - Check the status code and response body.
+  - Verify auth, headers, method, and URL.
+  - Handle expected HTTP errors explicitly.
+  full_error_types:
+  - urllib.error.HTTPError
+  match_any:
+  - urllib.error.HTTPError
+  - HTTP Error
 - id: numpy_axis_error
   error: AxisError
-  match:
-    - "numpy.exceptions.AxisError"
-    - "numpy.AxisError"
-    - "axis"
-  title: "NumPy axis is out of bounds"
-  explanation: "NumPy received an axis value that does not exist for the array dimensions."
+  title: NumPy axis is out of bounds
+  explanation: NumPy received an axis value that does not exist for the array dimensions.
   causes:
-    - "The array has fewer dimensions than expected."
-    - "An axis number is negative or too large."
-    - "The data was squeezed, flattened, or loaded with an unexpected shape."
+  - The array has fewer dimensions than expected.
+  - An axis number is negative or too large.
+  - The data was squeezed, flattened, or loaded with an unexpected shape.
   fixes:
-    - "Print array.shape before the failing operation."
-    - "Use the correct axis for the actual number of dimensions."
-    - "Normalize input shapes before numeric operations."
-
+  - Print array.shape before the failing operation.
+  - Use the correct axis for the actual number of dimensions.
+  - Normalize input shapes before numeric operations.
+  match_any:
+  - numpy.exceptions.AxisError
+  - numpy.AxisError
+  - axis
+  full_error_types:
+  - numpy.exceptions.AxisError
+  - numpy.AxisError
 - id: pandas_key_error
   error: KeyError
-  match:
-    - "pandas"
-    - "DataFrame"
-    - "Index"
-  title: "Pandas column or index key is missing"
-  explanation: "Pandas could not find the requested column, index label, or level."
+  title: Pandas column or index key is missing
+  explanation: Pandas could not find the requested column, index label, or level.
   causes:
-    - "The column name is misspelled."
-    - "CSV/API data has different headers than expected."
-    - "The index is not set to the labels being accessed."
+  - The column name is misspelled.
+  - CSV/API data has different headers than expected.
+  - The index is not set to the labels being accessed.
   fixes:
-    - "Print df.columns and df.index to inspect available labels."
-    - "Strip whitespace from column names if data came from CSV."
-    - "Use df.get or check membership when a column may be optional."
-
+  - Print df.columns and df.index to inspect available labels.
+  - Strip whitespace from column names if data came from CSV.
+  - Use df.get or check membership when a column may be optional.
+  match_any:
+  - pandas.
+  - pandas/core
+  - DataFrame
+  priority: 20
 - id: pandas_parser_error
   error: ParserError
-  match:
-    - "pandas.errors.ParserError"
-    - "Error tokenizing data"
-  title: "Pandas could not parse input data"
-  explanation: "Pandas failed while reading CSV or another structured data file."
+  title: Pandas could not parse input data
+  explanation: Pandas failed while reading CSV or another structured data file.
   causes:
-    - "Rows have inconsistent numbers of columns."
-    - "The delimiter, quoting, or encoding is wrong."
-    - "The file is corrupted or not the expected format."
+  - Rows have inconsistent numbers of columns.
+  - The delimiter, quoting, or encoding is wrong.
+  - The file is corrupted or not the expected format.
   fixes:
-    - "Check the file around the line mentioned in the error."
-    - "Pass the correct sep, quotechar, encoding, or engine."
-    - "Inspect the raw file before parsing it as CSV."
-
+  - Check the file around the line mentioned in the error.
+  - Pass the correct sep, quotechar, encoding, or engine.
+  - Inspect the raw file before parsing it as CSV.
+  match_any:
+  - pandas.errors.ParserError
+  - Error tokenizing data
+  full_error_types:
+  - pandas.errors.ParserError
 - id: pytest_failed_assertion
   error: Failed
-  match:
-    - "pytest"
-    - "_pytest.outcomes.Failed"
-  title: "pytest assertion or explicit fail failed"
-  explanation: "pytest reported a failed assertion or pytest.fail call."
+  title: pytest assertion or explicit fail failed
+  explanation: pytest reported a failed assertion or pytest.fail call.
   causes:
-    - "The tested behavior differs from the expected value."
-    - "The expected value in the test is outdated or wrong."
-    - "The fixture or input data does not match the test scenario."
+  - The tested behavior differs from the expected value.
+  - The expected value in the test is outdated or wrong.
+  - The fixture or input data does not match the test scenario.
   fixes:
-    - "Read the assertion diff in the pytest output."
-    - "Inspect actual and expected values."
-    - "Fix the implementation or update the test expectation if requirements changed."
-
+  - Read the assertion diff in the pytest output.
+  - Inspect actual and expected values.
+  - Fix the implementation or update the test expectation if requirements changed.
+  match_any:
+  - pytest
+  - _pytest.outcomes.Failed
+  full_error_types:
+  - _pytest.outcomes.Failed
+  frameworks:
+  - pytest
 - id: pytest_skipped
   error: Skipped
-  match:
-    - "pytest"
-    - "_pytest.outcomes.Skipped"
-  title: "pytest skipped the test"
-  explanation: "pytest skipped a test because a skip condition or missing requirement was triggered."
+  title: pytest skipped the test
+  explanation: pytest skipped a test because a skip condition or missing requirement was triggered.
   causes:
-    - "pytest.skip or a skip marker was used."
-    - "A platform, dependency, or version condition is not satisfied."
-    - "A fixture skipped the test during setup."
+  - pytest.skip or a skip marker was used.
+  - A platform, dependency, or version condition is not satisfied.
+  - A fixture skipped the test during setup.
   fixes:
-    - "Read the skip reason in the pytest output."
-    - "Install required optional dependencies if the test should run."
-    - "Adjust skip conditions only if they no longer match the project requirements."
-
+  - Read the skip reason in the pytest output.
+  - Install required optional dependencies if the test should run.
+  - Adjust skip conditions only if they no longer match the project requirements.
+  match_any:
+  - pytest
+  - _pytest.outcomes.Skipped
+  full_error_types:
+  - _pytest.outcomes.Skipped
+  frameworks:
+  - pytest
 - id: click_exception
   error: ClickException
-  match:
-    - "click.exceptions.ClickException"
-    - "ClickException"
-  title: "Click command failed"
-  explanation: "A Click-based CLI command raised a user-facing command error."
+  title: Click command failed
+  explanation: A Click-based CLI command raised a user-facing command error.
   causes:
-    - "Required CLI arguments or options are invalid."
-    - "A command callback raised ClickException."
-    - "The command environment is missing required files or settings."
+  - Required CLI arguments or options are invalid.
+  - A command callback raised ClickException.
+  - The command environment is missing required files or settings.
   fixes:
-    - "Run the command with --help."
-    - "Check option names, argument values, and current working directory."
-    - "Read the ClickException message for the exact command-level problem."
-
+  - Run the command with --help.
+  - Check option names, argument values, and current working directory.
+  - Read the ClickException message for the exact command-level problem.
+  match_any:
+  - click.exceptions.ClickException
+  - ClickException
+  full_error_types:
+  - click.exceptions.ClickException
 - id: typer_bad_parameter
   error: BadParameter
-  match:
-    - "click.exceptions.BadParameter"
-    - "typer"
-    - "Invalid value"
-  title: "Typer/Click parameter is invalid"
-  explanation: "A Typer or Click command received an argument value that failed validation."
+  title: Typer/Click parameter is invalid
+  explanation: A Typer or Click command received an argument value that failed validation.
   causes:
-    - "The value has the wrong type or format."
-    - "A file/path option points to an invalid location."
-    - "A custom callback rejected the value."
+  - The value has the wrong type or format.
+  - A file/path option points to an invalid location.
+  - A custom callback rejected the value.
   fixes:
-    - "Run the command with --help."
-    - "Check the expected type and allowed values."
-    - "If this is test code, verify how CliRunner passes arguments."
-
+  - Run the command with --help.
+  - Check the expected type and allowed values.
+  - If this is test code, verify how CliRunner passes arguments.
+  match_any:
+  - click.exceptions.BadParameter
+  - typer
+  - Invalid value
+  full_error_types:
+  - click.exceptions.BadParameter
 - id: flask_bad_request
   error: BadRequest
-  match:
-    - "werkzeug.exceptions.BadRequest"
-    - "BadRequest"
-  title: "Flask/Werkzeug bad request"
-  explanation: "Flask or Werkzeug rejected request data as invalid."
+  title: Flask/Werkzeug bad request
+  explanation: Flask or Werkzeug rejected request data as invalid.
   causes:
-    - "JSON, form data, query parameters, or headers are malformed."
-    - "The code accessed missing request data in a strict way."
-    - "The client sent a request that does not match the endpoint."
+  - JSON, form data, query parameters, or headers are malformed.
+  - The code accessed missing request data in a strict way.
+  - The client sent a request that does not match the endpoint.
   fixes:
-    - "Inspect the incoming request body and headers."
-    - "Use request.get_json(silent=True) or validation when data may be missing."
-    - "Return a clear 400 response for invalid client input."
-
+  - Inspect the incoming request body and headers.
+  - Use request.get_json(silent=True) or validation when data may be missing.
+  - Return a clear 400 response for invalid client input.
+  match_any:
+  - werkzeug.exceptions.BadRequest
+  - BadRequest
+  full_error_types:
+  - werkzeug.exceptions.BadRequest
+  frameworks:
+  - Flask
 - id: jwt_decode_error
   error: DecodeError
-  match:
-    - "jwt.exceptions.DecodeError"
-    - "jwt.DecodeError"
-  title: "JWT token could not be decoded"
-  explanation: "PyJWT could not decode the token."
+  title: JWT token could not be decoded
+  explanation: PyJWT could not decode the token.
   causes:
-    - "The token is malformed."
-    - "The signing algorithm or secret/key is wrong."
-    - "A non-JWT value was passed as the token."
+  - The token is malformed.
+  - The signing algorithm or secret/key is wrong.
+  - A non-JWT value was passed as the token.
   fixes:
-    - "Check that the token has the expected three JWT segments."
-    - "Verify the algorithm and secret or public key."
-    - "Do not trust or decode user input without validation and error handling."
-
+  - Check that the token has the expected three JWT segments.
+  - Verify the algorithm and secret or public key.
+  - Do not trust or decode user input without validation and error handling.
+  match_any:
+  - jwt.exceptions.DecodeError
+  - jwt.DecodeError
+  full_error_types:
+  - jwt.exceptions.DecodeError
+  - jwt.DecodeError
 - id: jwt_expired_signature
   error: ExpiredSignatureError
-  match:
-    - "jwt.exceptions.ExpiredSignatureError"
-    - "ExpiredSignatureError"
-  title: "JWT token is expired"
-  explanation: "PyJWT rejected the token because its exp claim is in the past."
+  title: JWT token is expired
+  explanation: PyJWT rejected the token because its exp claim is in the past.
   causes:
-    - "The client is using an old token."
-    - "Server/client clocks are wrong."
-    - "The token lifetime is too short for the workflow."
+  - The client is using an old token.
+  - Server/client clocks are wrong.
+  - The token lifetime is too short for the workflow.
   fixes:
-    - "Issue a fresh token or use the refresh-token flow."
-    - "Check system clocks."
-    - "Handle expired tokens with a clear authentication response."
-
+  - Issue a fresh token or use the refresh-token flow.
+  - Check system clocks.
+  - Handle expired tokens with a clear authentication response.
+  match_any:
+  - jwt.exceptions.ExpiredSignatureError
+  - ExpiredSignatureError
+  full_error_types:
+  - jwt.exceptions.ExpiredSignatureError
+  - jwt.ExpiredSignatureError
 - id: yaml_error
   error: YAMLError
-  match:
-    - "yaml.error.YAMLError"
-    - "yaml.parser.ParserError"
-    - "yaml.scanner.ScannerError"
-  title: "YAML parsing failed"
-  explanation: "PyYAML could not parse a YAML file or string."
+  title: YAML parsing failed
+  explanation: PyYAML could not parse a YAML file or string.
   causes:
-    - "Indentation is invalid."
-    - "A colon, quote, list marker, or multiline block is malformed."
-    - "The file is not actually YAML."
+  - Indentation is invalid.
+  - A colon, quote, list marker, or multiline block is malformed.
+  - The file is not actually YAML.
   fixes:
-    - "Check the line and column in the YAML error."
-    - "Validate indentation and quoting."
-    - "Use safe_load for trusted YAML parsing unless a different loader is required."
-
+  - Check the line and column in the YAML error.
+  - Validate indentation and quoting.
+  - Use safe_load for trusted YAML parsing unless a different loader is required.
+  match_any:
+  - yaml.error.YAMLError
+  - yaml.parser.ParserError
+  - yaml.scanner.ScannerError
 - id: toml_decode_error
   error: TOMLDecodeError
-  match:
-    - "tomllib.TOMLDecodeError"
-    - "tomli.TOMLDecodeError"
-    - "toml.decoder.TomlDecodeError"
-  title: "TOML parsing failed"
-  explanation: "Python could not parse a TOML configuration file."
+  title: TOML parsing failed
+  explanation: Python could not parse a TOML configuration file.
   causes:
-    - "The TOML syntax is invalid."
-    - "A string, array, table, or key is malformed."
-    - "The file contains JSON/YAML-style syntax instead of TOML."
+  - The TOML syntax is invalid.
+  - A string, array, table, or key is malformed.
+  - The file contains JSON/YAML-style syntax instead of TOML.
   fixes:
-    - "Check the reported line and column."
-    - "Validate table headers, quotes, arrays, and duplicate keys."
-    - "Compare pyproject.toml against a known-good minimal example."
-
+  - Check the reported line and column.
+  - Validate table headers, quotes, arrays, and duplicate keys.
+  - Compare pyproject.toml against a known-good minimal example.
+  match_any:
+  - tomllib.TOMLDecodeError
+  - tomli.TOMLDecodeError
+  - toml.decoder.TomlDecodeError
 - id: importlib_metadata_package_not_found
   error: PackageNotFoundError
-  match:
-    - "importlib.metadata.PackageNotFoundError"
-    - "PackageNotFoundError"
-  title: "Installed package metadata was not found"
-  explanation: "importlib.metadata could not find metadata for the requested distribution package."
+  title: Installed package metadata was not found
+  explanation: importlib.metadata could not find metadata for the requested distribution package.
   causes:
-    - "The package is not installed in the active environment."
-    - "The distribution name differs from the import name."
-    - "The code checks package metadata before dependencies are installed."
+  - The package is not installed in the active environment.
+  - The distribution name differs from the import name.
+  - The code checks package metadata before dependencies are installed.
   fixes:
-    - "Install the distribution package in the active environment."
-    - "Check the package name used by pip, not only the import name."
-    - "Run python -m pip show <package> with the same Python executable."
+  - Install the distribution package in the active environment.
+  - Check the package name used by pip, not only the import name.
+  - Run python -m pip show <package> with the same Python executable.
+  match_any:
+  - importlib.metadata.PackageNotFoundError
+  - PackageNotFoundError
+  full_error_types:
+  - importlib.metadata.PackageNotFoundError
 - id: django_improperly_configured
   error: ImproperlyConfigured
-  match:
-    - "django.core.exceptions.ImproperlyConfigured"
-  title: "Django configuration is invalid"
-  explanation: "Django could not start because a required setting, app, middleware, template, database, or environment value is configured incorrectly."
+  title: Django configuration is invalid
+  explanation: Django could not start because a required setting, app, middleware, template, database, or environment
+    value is configured incorrectly.
   causes:
-    - "DJANGO_SETTINGS_MODULE is missing or points to the wrong settings module."
-    - "A required environment variable is missing."
-    - "INSTALLED_APPS, MIDDLEWARE, DATABASES, TEMPLATES, or static/media settings contain an invalid value."
-    - "A package required by Django settings is not installed."
+  - DJANGO_SETTINGS_MODULE is missing or points to the wrong settings module.
+  - A required environment variable is missing.
+  - INSTALLED_APPS, MIDDLEWARE, DATABASES, TEMPLATES, or static/media settings contain an invalid value.
+  - A package required by Django settings is not installed.
   fixes:
-    - "Check your settings.py file and the exact message above."
-    - "Check DJANGO_SETTINGS_MODULE and environment variables."
-    - "Verify INSTALLED_APPS and MIDDLEWARE entries."
-    - "Run the command from the Django project root where manage.py exists."
-
+  - Check your settings.py file and the exact message above.
+  - Check DJANGO_SETTINGS_MODULE and environment variables.
+  - Verify INSTALLED_APPS and MIDDLEWARE entries.
+  - Run the command from the Django project root where manage.py exists.
+  full_error_types:
+  - django.core.exceptions.ImproperlyConfigured
+  match_any:
+  - django.core.exceptions.ImproperlyConfigured
+  frameworks:
+  - Django
 - id: django_no_reverse_match
   error: NoReverseMatch
-  match:
-    - "NoReverseMatch"
-    - "django.urls.exceptions.NoReverseMatch"
-  title: "Django could not build a URL"
-  explanation: "Django tried to reverse a URL name, but it could not find a matching URL pattern or the required parameters were missing."
+  title: Django could not build a URL
+  explanation: Django tried to reverse a URL name, but it could not find a matching URL pattern or the required
+    parameters were missing.
   causes:
-    - "The URL name is misspelled."
-    - "The app namespace is missing or incorrect."
-    - "The URL pattern requires arguments that were not provided."
-    - "The URL is not included in the project's urls.py."
+  - The URL name is misspelled.
+  - The app namespace is missing or incorrect.
+  - The URL pattern requires arguments that were not provided.
+  - The URL is not included in the project's urls.py.
   fixes:
-    - "Check the name= value in your path() or re_path()."
-    - "Check app_name and namespace usage."
-    - "Pass required args or kwargs to reverse(), redirect(), or the url template tag."
-    - "Make sure the app urls.py is included in the root urls.py."
-
+  - Check the name= value in your path() or re_path().
+  - Check app_name and namespace usage.
+  - Pass required args or kwargs to reverse(), redirect(), or the url template tag.
+  - Make sure the app urls.py is included in the root urls.py.
+  full_error_types:
+  - django.urls.exceptions.NoReverseMatch
+  match_any:
+  - NoReverseMatch
+  - django.urls.exceptions.NoReverseMatch
+  frameworks:
+  - Django
 - id: fastapi_response_validation_error
   error: ResponseValidationError
-  match:
-    - "fastapi.exceptions.ResponseValidationError"
-    - "ResponseValidationError"
-  title: "FastAPI response does not match response_model"
-  explanation: "FastAPI tried to validate the returned response against response_model, but the returned data does not match the declared schema."
+  title: FastAPI response does not match response_model
+  explanation: FastAPI tried to validate the returned response against response_model, but the returned data does
+    not match the declared schema.
   causes:
-    - "The endpoint returns missing fields."
-    - "The endpoint returns values with the wrong type."
-    - "response_model is too strict for the returned data."
+  - The endpoint returns missing fields.
+  - The endpoint returns values with the wrong type.
+  - response_model is too strict for the returned data.
   fixes:
-    - "Check the endpoint return value."
-    - "Check response_model fields and types."
-    - "Make optional fields Optional or provide default values where appropriate."
-    - "Return data that matches the Pydantic model."
-
+  - Check the endpoint return value.
+  - Check response_model fields and types.
+  - Make optional fields Optional or provide default values where appropriate.
+  - Return data that matches the Pydantic model.
+  full_error_types:
+  - fastapi.exceptions.ResponseValidationError
+  match_any:
+  - fastapi.exceptions.ResponseValidationError
+  - ResponseValidationError
+  frameworks:
+  - FastAPI
 - id: sqlalchemy_operational_error
   error: OperationalError
-  match:
-    - "sqlalchemy.exc.OperationalError"
-  title: "SQLAlchemy database connection or operation failed"
-  explanation: "SQLAlchemy could not complete a database operation. This is often a database URL, network, server, credentials, or migration problem."
+  title: SQLAlchemy database connection or operation failed
+  explanation: SQLAlchemy could not complete a database operation. This is often a database URL, network, server,
+    credentials, or migration problem.
   causes:
-    - "The database server is not running."
-    - "The DATABASE_URL is wrong."
-    - "The database or table does not exist."
-    - "Migrations were not applied."
+  - The database server is not running.
+  - The DATABASE_URL is wrong.
+  - The database or table does not exist.
+  - Migrations were not applied.
   fixes:
-    - "Check DATABASE_URL and environment variables."
-    - "Make sure the database server is running."
-    - "Apply migrations with Alembic if the schema is missing."
-    - "Check the original DBAPI error inside the traceback."
-
+  - Check DATABASE_URL and environment variables.
+  - Make sure the database server is running.
+  - Apply migrations with Alembic if the schema is missing.
+  - Check the original DBAPI error inside the traceback.
+  full_error_types:
+  - sqlalchemy.exc.OperationalError
+  match_any:
+  - sqlalchemy.exc.OperationalError
+  frameworks:
+  - SQLAlchemy
+- id: django_command_error
+  error: CommandError
+  title: Django management command failed
+  explanation: Django stopped a management command because its arguments, configuration, or project state were invalid.
+  causes:
+  - The command name or one of its options is invalid.
+  - Django settings or installed applications are not loaded correctly.
+  - A custom management command raised CommandError intentionally.
+  fixes:
+  - Read the command message and verify the command syntax with python manage.py help.
+  - Run the command from the directory containing manage.py or set DJANGO_SETTINGS_MODULE correctly.
+  - If this is a custom command, inspect where CommandError is raised.
+  full_error_types:
+  - django.core.management.base.CommandError
+  match_any:
+  - django.core.management.base.CommandError
+  frameworks:
+  - Django
+  priority: 30
 - id: alembic_command_error
   error: CommandError
-  match:
-    - "alembic.util.exc.CommandError"
-    - "Can't locate revision"
-    - "Target database is not up to date"
-  title: "Alembic migration command failed"
-  explanation: "Alembic could not complete a migration command. This usually means revision history, migration files, or database migration state is inconsistent."
+  title: Alembic migration command failed
+  explanation: Alembic could not complete a migration command. This usually means revision history, migration files,
+    or database migration state is inconsistent.
   causes:
-    - "A migration revision ID is missing."
-    - "The database is not upgraded to the expected revision."
-    - "alembic.ini or env.py is configured incorrectly."
+  - A migration revision ID is missing.
+  - The database is not upgraded to the expected revision.
+  - alembic.ini or env.py is configured incorrectly.
   fixes:
-    - "Run alembic current to inspect the current DB revision."
-    - "Run alembic history to inspect available revisions."
-    - "Run alembic upgrade head if the database is behind."
-    - "Check alembic.ini and migrations/env.py."
-
+  - Run alembic current to inspect the current DB revision.
+  - Run alembic history to inspect available revisions.
+  - Run alembic upgrade head if the database is behind.
+  - Check alembic.ini and migrations/env.py.
+  full_error_types:
+  - alembic.util.exc.CommandError
+  match_any:
+  - alembic.util.exc.CommandError
+  - Can't locate revision
+  - Target database is not up to date
+  frameworks:
+  - Alembic
 - id: pytest_fixture_lookup_error
   error: FixtureLookupError
-  match:
-    - "FixtureLookupError"
-    - "fixture"
-  title: "pytest fixture was not found"
-  explanation: "pytest could not find the requested fixture."
+  title: pytest fixture was not found
+  explanation: pytest could not find the requested fixture.
   causes:
-    - "The fixture name is misspelled."
-    - "The fixture is not defined in this test file or conftest.py."
-    - "The fixture is defined in a plugin that is not installed or not enabled."
+  - The fixture name is misspelled.
+  - The fixture is not defined in this test file or conftest.py.
+  - The fixture is defined in a plugin that is not installed or not enabled.
   fixes:
-    - "Check the fixture name."
-    - "Define the fixture in the test file or conftest.py."
-    - "Check installed pytest plugins."
-    - "Run pytest --fixtures to list available fixtures."
-
+  - Check the fixture name.
+  - Define the fixture in the test file or conftest.py.
+  - Check installed pytest plugins.
+  - Run pytest --fixtures to list available fixtures.
+  match_any:
+  - FixtureLookupError
+  - fixture
+  full_error_types:
+  - _pytest.fixtures.FixtureLookupError
+  frameworks:
+  - pytest
 - id: aiogram_telegram_bad_request
   error: TelegramBadRequest
-  match:
-    - "aiogram.exceptions.TelegramBadRequest"
-    - "TelegramBadRequest"
-  title: "aiogram Telegram Bad Request"
-  explanation: "Telegram rejected an aiogram API request because the request data is invalid."
+  title: aiogram Telegram Bad Request
+  explanation: Telegram rejected an aiogram API request because the request data is invalid.
   causes:
-    - "The chat_id, message_id, callback data, markup, or text is invalid."
-    - "The bot tried to edit/delete/send something that Telegram does not allow."
-    - "HTML/Markdown formatting is invalid."
+  - The chat_id, message_id, callback data, markup, or text is invalid.
+  - The bot tried to edit/delete/send something that Telegram does not allow.
+  - HTML/Markdown formatting is invalid.
   fixes:
-    - "Read Telegram's exact error description in the message."
-    - "Check chat_id, message_id, and reply_markup."
-    - "Validate parse_mode formatting."
-    - "Handle TelegramBadRequest with try/except when the action may fail."
-
+  - Read Telegram's exact error description in the message.
+  - Check chat_id, message_id, and reply_markup.
+  - Validate parse_mode formatting.
+  - Handle TelegramBadRequest with try/except when the action may fail.
+  full_error_types:
+  - aiogram.exceptions.TelegramBadRequest
+  match_any:
+  - aiogram.exceptions.TelegramBadRequest
+  - TelegramBadRequest
+  frameworks:
+  - aiogram
 - id: pytelegrambotapi_api_exception
   error: ApiTelegramException
-  match:
-    - "telebot.apihelper.ApiTelegramException"
-    - "ApiTelegramException"
-  title: "pyTelegramBotAPI Telegram API error"
-  explanation: "Telegram returned an API error while pyTelegramBotAPI was calling a bot method."
+  title: pyTelegramBotAPI Telegram API error
+  explanation: Telegram returned an API error while pyTelegramBotAPI was calling a bot method.
   causes:
-    - "The bot token, chat_id, message_id, parse mode, or reply markup is invalid."
-    - "Telegram rejected the requested action."
-    - "The bot has no permission for the target chat/action."
+  - The bot token, chat_id, message_id, parse mode, or reply markup is invalid.
+  - Telegram rejected the requested action.
+  - The bot has no permission for the target chat/action.
   fixes:
-    - "Read the Telegram error code and description."
-    - "Check bot token and chat permissions."
-    - "Check parse_mode formatting and reply_markup."
-    - "Wrap risky Telegram calls in try/except."
+  - Read the Telegram error code and description.
+  - Check bot token and chat permissions.
+  - Check parse_mode formatting and reply_markup.
+  - Wrap risky Telegram calls in try/except.
+  full_error_types:
+  - telebot.apihelper.ApiTelegramException
+  match_any:
+  - telebot.apihelper.ApiTelegramException
+  - ApiTelegramException
+  frameworks:
+  - pyTelegramBotAPI

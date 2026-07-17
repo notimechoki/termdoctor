@@ -1,8 +1,15 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from pathlib import Path
 
-from termdoctor.models import CommandResult, ErrorRule, ParsedError
+from termdoctor.models import (
+    CommandResult,
+    DiagnosticSection,
+    ErrorRule,
+    FrameworkDiagnosisContext,
+    ModuleDiagnosisContext,
+    ParsedError,
+)
 
 
 @dataclass
@@ -12,8 +19,10 @@ class EngineDiagnosis:
     parsed_error: ParsedError
     rule: ErrorRule | None
     command_result: CommandResult | None = None
-    module_context: Any | None = None
-    framework_context: Any | None = None
+    sections: list[DiagnosticSection] = field(default_factory=list)
+    environment: object | None = None
+    module_context: ModuleDiagnosisContext | None = None
+    framework_context: FrameworkDiagnosisContext | None = None
 
 
 class BaseEngine(ABC):
@@ -22,24 +31,26 @@ class BaseEngine(ABC):
 
     @abstractmethod
     def can_handle_command(self, command: str | list[str]) -> bool:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def can_handle_text(self, text: str) -> bool:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def parse_error(self, text: str) -> ParsedError | None:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
-    def find_rule(self, parsed_error: ParsedError) -> ErrorRule | None:
-        pass
+    def find_rule(self, parsed_error: ParsedError, locale: str | None = None) -> ErrorRule | None:
+        raise NotImplementedError
 
     @abstractmethod
     def diagnose(
         self,
         text: str,
         command_result: CommandResult | None = None,
+        cwd: Path | None = None,
+        locale: str | None = None,
     ) -> EngineDiagnosis | None:
-        pass
+        raise NotImplementedError

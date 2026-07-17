@@ -27,3 +27,7 @@ htmlcov/
 
 # TermDoctor local data
 .termdoctor/
+.ruff_cache/
+.mypy_cache/
+*.zip
+reports/

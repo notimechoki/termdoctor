@@ -1,5 +1,48 @@
 # Changelog
 
+## 0.3.1 - Reliable Python Diagnosis and Localization
+
+### Added
+
+- Added English and Russian interface localization with `--lang en|ru`, aliases, environment-variable support, saved configuration, and English fallback.
+- Added complete Russian translations for all 105 Python diagnosis rules.
+- Added `--engine python` as the explicit engine selector while retaining the old command-level `--lang python` compatibility alias.
+- Added `termdoctor config language [CODE]` and `--no-history` for sensitive runs.
+- Added ANSI-colored traceback support, user-defined exception support, traceback frame collection, exception chains, and nearby source-code context.
+- Added strict rule metadata: `match_any`, `match_all`, `exclude`, `full_error_types`, framework constraints, and priority.
+- Added more precise rules for common `TypeError`, `ValueError`, `ImportError`, `AttributeError`, and Django command failures.
+- Added Pydantic as its own detected ecosystem.
+- Added support for versioned Python executables, Windows `.exe` paths, and common environment runners.
+- Added optional dependencies, dependency groups, Poetry groups, Pipfile, VCS/direct references, and broader requirements-file discovery.
+- Added source/standard-library/local-module checks for `ModuleNotFoundError`.
+- Added secret redaction, output truncation, serialized and atomic history writes, private file permissions, corrupt-history backups, and combined diagnostic output.
+- Added regression and localization tests.
+
+### Changed
+
+- Changed rule selection so specialized rules are used only when their evidence actually matches.
+- Changed framework detection to require primary evidence, preventing Pydantic/Jinja2/Werkzeug from falsely identifying FastAPI or Flask.
+- Changed command diagnosis to inspect both `stdout` and `stderr`.
+- Changed Python project checks so absent optional frameworks are informational instead of warnings.
+- Changed reports to inspect the original failure working directory instead of the current shell directory.
+- Changed report and renderer output to use generic engine-provided diagnostic sections.
+- Changed package version handling to use `termdoctor.__version__` as the single source of truth.
+- Changed install hints to prefer the active interpreter via `python -m pip`.
+- Updated documentation, architecture examples, privacy notes, and release commands for 0.3.1.
+
+### Fixed
+
+- Fixed Django `CommandError` being diagnosed as an Alembic failure.
+- Fixed unmatched specialized rules falling back to the first rule with the same short exception name.
+- Fixed `python3.13`, Windows `python.exe`, and Windows `pytest.exe` command detection.
+- Fixed ANSI escape codes and custom exception names preventing traceback parsing.
+- Fixed unreachable rules for dotted or non-`*Error` exception names.
+- Fixed false FastAPI detection from Pydantic alone.
+- Fixed local and standard-library imports receiving inappropriate `pip install` suggestions.
+- Fixed reports generated from history using unrelated project metadata.
+- Fixed stale rule paths and outdated project structure in user-facing output.
+- Fixed concurrent history updates losing entries.
+
 ## 0.3.0 - Language Engine Architecture
 
 ### Added

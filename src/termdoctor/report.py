@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any
 
-from termdoctor.core.history import get_last_history_item
+from termdoctor.core.history import get_history_text, get_last_history_item
 from termdoctor.engines.base import EngineDiagnosis
 from termdoctor.engines.registry import get_engine_by_language, get_language_detector
-from termdoctor.engines.python.environment import get_python_environment
+from termdoctor.i18n import get_locale, tr
 from termdoctor.models import PythonEnvironment
 from termdoctor.renderer import apply_context
 
@@ -12,13 +14,9 @@ from termdoctor.renderer import apply_context
 def load_report_source(source: str) -> tuple[str, dict[str, Any]]:
     if source == "last":
         last_item = get_last_history_item()
-
         if not last_item:
-            raise ValueError("No saved errors found. Run a failing command first.")
-
-        text = last_item.get("stderr") or last_item.get("stdout") or ""
-
-        metadata = {
+            raise ValueError(tr("report.no_saved"))
+        return get_history_text(last_item), {
             "source": "last",
             "command": last_item.get("command"),
             "cwd": last_item.get("cwd"),
@@ -26,15 +24,12 @@ def load_report_source(source: str) -> tuple[str, dict[str, Any]]:
             "timestamp": last_item.get("timestamp"),
         }
 
-        return text, metadata
-
     path = Path(source)
-
     if path.exists() and path.is_file():
         return path.read_text(encoding="utf-8"), {
             "source": str(path),
             "command": None,
-            "cwd": None,
+            "cwd": str(path.resolve().parent),
             "exit_code": None,
             "timestamp": None,
         }
@@ -48,31 +43,25 @@ def load_report_source(source: str) -> tuple[str, dict[str, Any]]:
     }
 
 
-def build_markdown_report(source: str, include_raw: bool = True, lang: str | None = None) -> str:
+def build_markdown_report(
+    source: str,
+    include_raw: bool = True,
+    engine_name: str | None = None,
+    lang: str | None = None,
+) -> str:
+    selected_engine = engine_name or lang
     text, metadata = load_report_source(source)
-
-    if lang:
-        engine = get_engine_by_language(lang)
-    else:
-        engine = get_language_detector().detect_for_text(text)
-
+    engine = get_engine_by_language(selected_engine) if selected_engine else get_language_detector().detect_for_text(text)
     if engine is None:
-        raise ValueError("No supported language engine could detect this traceback.")
+        raise ValueError(tr("report.no_engine"))
 
-    diagnosis = engine.diagnose(text)
-
+    cwd = Path(metadata["cwd"]) if metadata.get("cwd") else None
+    diagnosis = engine.diagnose(text, cwd=cwd, locale=get_locale())
     if diagnosis is None:
-        raise ValueError("No supported error could be detected in the provided source.")
+        raise ValueError(tr("report.no_error"))
 
-    environment = get_python_environment() if diagnosis.language == "python" else None
-
-    return render_markdown_report(
-        diagnosis=diagnosis,
-        environment=environment,
-        raw_traceback=text,
-        metadata=metadata,
-        include_raw=include_raw,
-    )
+    environment = diagnosis.environment if diagnosis.language == "python" else None
+    return render_markdown_report(diagnosis, environment, text, metadata, include_raw)
 
 
 def render_markdown_report(
@@ -86,143 +75,116 @@ def render_markdown_report(
     rule = diagnosis.rule
     module_context = diagnosis.module_context
     framework_context = diagnosis.framework_context
-
-    lines: list[str] = []
-
-    lines.append("# TermDoctor Report")
-    lines.append("")
-    lines.append("## Summary")
-    lines.append("")
-    lines.append(f"- **Language:** `{diagnosis.display_name}`")
-    lines.append(f"- **Error:** `{parsed_error.error_type}`")
-
+    lines: list[str] = [f"# {tr('report.title')}", "", f"## {tr('report.summary')}", ""]
+    lines.append(f"- **{tr('report.language')}:** `{diagnosis.display_name}`")
+    lines.append(f"- **{tr('report.error')}:** `{parsed_error.error_type}`")
     if parsed_error.message:
-        lines.append(f"- **Message:** `{parsed_error.message}`")
-
+        lines.append(f"- **{tr('report.message')}:** `{escape_inline_code(parsed_error.message)}`")
     if parsed_error.file_path:
         location = parsed_error.file_path
-
         if parsed_error.line_number is not None:
             location += f":{parsed_error.line_number}"
-
-        lines.append(f"- **Location:** `{location}`")
-
-    if metadata.get("command"):
-        lines.append(f"- **Command:** `{metadata['command']}`")
-
-    if metadata.get("exit_code") is not None:
-        lines.append(f"- **Exit code:** `{metadata['exit_code']}`")
-
-    if metadata.get("cwd"):
-        lines.append(f"- **Working directory:** `{metadata['cwd']}`")
-
-    if metadata.get("timestamp"):
-        lines.append(f"- **Timestamp:** `{metadata['timestamp']}`")
-
+        lines.append(f"- **{tr('report.location')}:** `{location}`")
+    for metadata_key, translation_key in (
+        ("command", "report.command"),
+        ("exit_code", "report.exit_code"),
+        ("cwd", "report.working_directory"),
+        ("timestamp", "report.timestamp"),
+    ):
+        value = metadata.get(metadata_key)
+        if value is not None:
+            lines.append(f"- **{tr(translation_key)}:** `{escape_inline_code(str(value))}`")
     lines.append("")
 
+    if len(parsed_error.exception_chain) > 1:
+        lines.extend([f"## {tr('report.exception_chain')}", ""])
+        for item in parsed_error.exception_chain:
+            lines.append(f"- `{item}`")
+        lines.append("")
+
+    if parsed_error.source_context:
+        lines.extend([f"## {tr('report.source_context')}", "", "```python"])
+        lines.extend(parsed_error.source_context)
+        lines.extend(["```", ""])
+
     if framework_context:
-        lines.append("## Framework context")
-        lines.append("")
-        lines.append(f"- **Matched framework:** `{framework_context.matched_framework or '-'}`")
-
+        lines.extend([f"## {tr('report.framework_context')}", ""])
+        lines.append(f"- **{tr('report.matched_framework')}:** `{framework_context.matched_framework or '-'}`")
         if framework_context.detected_frameworks:
-            detected = ", ".join(framework.name for framework in framework_context.detected_frameworks)
-            lines.append(f"- **Detected in project:** `{detected}`")
-
+            detected = ", ".join(item.name for item in framework_context.detected_frameworks)
+            lines.append(f"- **{tr('report.detected_project')}:** `{detected}`")
         if framework_context.evidence:
-            lines.append(f"- **Evidence:** `{', '.join(framework_context.evidence)}`")
-
+            lines.append(f"- **{tr('report.evidence')}:** `{', '.join(framework_context.evidence)}`")
         lines.append("")
 
+    lines.extend([f"## {tr('report.diagnosis')}", ""])
     if rule:
-        lines.append("## Diagnosis")
-        lines.append("")
-        lines.append(apply_context(rule.explanation, parsed_error))
-        lines.append("")
-
+        lines.extend([apply_context(rule.explanation, parsed_error), ""])
         if rule.causes:
-            lines.append("## Most likely causes")
+            lines.extend([f"## {tr('report.likely_causes')}", ""])
+            lines.extend(
+                f"{index}. {apply_context(cause, parsed_error)}"
+                for index, cause in enumerate(rule.causes, 1)
+            )
             lines.append("")
-
-            for index, cause in enumerate(rule.causes, start=1):
-                lines.append(f"{index}. {apply_context(cause, parsed_error)}")
-
-            lines.append("")
-
         if rule.fixes:
-            lines.append("## Suggested fixes")
+            lines.extend([f"## {tr('report.fixes')}", ""])
+            lines.extend(
+                f"{index}. {apply_context(fix, parsed_error)}"
+                for index, fix in enumerate(rule.fixes, 1)
+            )
             lines.append("")
-
-            for index, fix in enumerate(rule.fixes, start=1):
-                lines.append(f"{index}. {apply_context(fix, parsed_error)}")
-
-            lines.append("")
-
     else:
-        lines.append("## Diagnosis")
-        lines.append("")
-        lines.append("TermDoctor detected an error, but no detailed rule exists for this error yet.")
-        lines.append("")
+        lines.extend([tr("report.unknown_rule"), ""])
 
     if module_context:
-        lines.append("## Module context")
-        lines.append("")
-        lines.append(f"- **Missing import:** `{module_context.module_name}`")
-        lines.append(f"- **Suggested package:** `{module_context.package_name}`")
-
+        lines.extend([f"## {tr('report.module_context')}", ""])
+        lines.append(f"- **{tr('report.missing_import')}:** `{module_context.module_name}`")
+        lines.append(f"- **{tr('report.suggested_package')}:** `{module_context.package_name}`")
         if module_context.package_hint:
             lines.append(
-                f"- **Package hint:** import `{module_context.module_name}` is usually installed as `{module_context.package_hint}`"
+                f"- **{tr('report.package_hint')}:** "
+                + tr("report.package_hint_value", module=module_context.module_name, package=module_context.package_hint)
             )
-
-        lines.append(f"- **Package in requirements.txt:** {'yes' if module_context.in_requirements else 'no'}")
-        lines.append(f"- **Package in pyproject.toml:** {'yes' if module_context.in_pyproject else 'no'}")
-
+        lines.append(f"- **{tr('report.in_requirements')}:** {tr('common.yes') if module_context.in_requirements else tr('common.no')}")
+        lines.append(f"- **{tr('report.in_pyproject')}:** {tr('common.yes') if module_context.in_pyproject else tr('common.no')}")
         if module_context.activation_command:
-            lines.append(f"- **Activation command:** `{module_context.activation_command}`")
-
+            lines.append(f"- **{tr('report.activation')}:** `{module_context.activation_command}`")
         lines.append("")
 
     if environment:
-        lines.append("## Environment")
+        lines.extend([f"## {tr('report.environment')}", ""])
+        environment_rows = (
+            ("report.python_version", environment.python_version),
+            ("report.python_executable", environment.python_executable),
+            ("report.current_directory", environment.current_dir),
+            ("report.project_root", environment.project_root),
+            ("report.virtual_environment", tr("common.active") if environment.venv_active else tr("common.not_active")),
+            ("report.active_venv", environment.active_venv_path or "-"),
+            ("report.project_venv", environment.project_venv_path or "-"),
+            ("report.requirements", ", ".join(environment.dependency_info.dependency_files) or "-"),
+            ("report.pyproject", environment.pyproject_file or "-"),
+        )
+        for key, value in environment_rows:
+            lines.append(f"- **{tr(key)}:** `{escape_inline_code(value)}`")
         lines.append("")
-        lines.append(f"- **Python version:** `{environment.python_version}`")
-        lines.append(f"- **Python executable:** `{environment.python_executable}`")
-        lines.append(f"- **Current directory:** `{environment.current_dir}`")
-        lines.append(f"- **Project root:** `{environment.project_root}`")
-        lines.append(f"- **Virtual environment:** `{'active' if environment.venv_active else 'not active'}`")
-        lines.append(f"- **Active venv path:** `{environment.active_venv_path or '-'}`")
-        lines.append(f"- **Project venv path:** `{environment.project_venv_path or '-'}`")
-        lines.append(f"- **requirements.txt:** `{environment.requirements_file or '-'}`")
-        lines.append(f"- **pyproject.toml:** `{environment.pyproject_file or '-'}`")
-        lines.append("")
-
         dependencies = environment.dependency_info.all_dependencies
-
         if dependencies:
-            lines.append("## Detected dependencies")
-            lines.append("")
-
-            for dependency in dependencies:
-                lines.append(f"- `{dependency}`")
-
+            lines.extend([f"## {tr('report.dependencies')}", ""])
+            lines.extend(f"- `{dependency}`" for dependency in dependencies)
             lines.append("")
 
     if include_raw:
-        lines.append("## Raw traceback")
-        lines.append("")
-        lines.append("```text")
-        lines.append(raw_traceback.strip())
-        lines.append("```")
-        lines.append("")
-
+        lines.extend([f"## {tr('report.raw_traceback')}", "", "```text", raw_traceback.strip(), "```", ""])
     return "\n".join(lines).rstrip() + "\n"
+
+
+def escape_inline_code(value: str) -> str:
+    return value.replace("`", "\\`")
 
 
 def write_report(markdown: str, output_path: str) -> Path:
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(markdown, encoding="utf-8")
-
     return path
