@@ -399,3 +399,5 @@ MIT License.
 ## Author
 
 Created by [notimechoki](https://github.com/notimechoki).
+
+---
