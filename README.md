@@ -59,6 +59,12 @@ Interface languages:
 
 ---
 
+## Requirements
+
+- Python 3.10 or newer
+
+---
+
 ## Installation
 
 ### Install from GitHub with pipx
